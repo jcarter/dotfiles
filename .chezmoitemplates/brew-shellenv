@@ -1,0 +1,11 @@
+{{- $brewBin := "" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{- if eq .chezmoi.arch "arm64" -}}
+{{- $brewBin = "/opt/homebrew/bin/brew" -}}
+{{- else -}}
+{{- $brewBin = "/usr/local/bin/brew" -}}
+{{- end -}}
+{{- else if eq .chezmoi.os "linux" -}}
+{{- $brewBin = "/home/linuxbrew/.linuxbrew/bin/brew" -}}
+{{- end -}}
+eval "$({{ $brewBin }} shellenv bash)"

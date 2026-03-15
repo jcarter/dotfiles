@@ -1,18 +1,30 @@
 #!/bin/bash
-
-{{ if eq .chezmoi.os "darwin" -}}
-{{ if eq .chezmoi.arch "arm64" -}}
-eval "$(/opt/homebrew/bin/brew shellenv bash)"
-{{ else -}}
-eval "$(/usr/local/bin/brew shellenv bash)"
-{{ end -}}
-{{ else if eq .chezmoi.os "linux" -}}
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
-{{ end -}}
+{{ template "brew-shellenv" . }}
 
 FISH_PATH="$(brew --prefix)/bin/fish"
 
+# Register fish as an acceptable login shell if not already listed.
 grep -qF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells > /dev/null
+
+# Switch the current user's default shell to fish.
 test "$SHELL" = "$FISH_PATH" || chsh -s "$FISH_PATH"
 
-fish -c 'fish_config theme choose "Dracula Official"'
+# Apply the Dracula theme. The theme file lives at
+# dot_config/fish/fisher/themes/Dracula.theme and is surfaced via the
+# ~/.config/fish/themes -> fisher/themes symlink created by fisher_config.fish.
+fish -c 'fish_config theme choose "Dracula"'
+
+# One-time tide prompt initialisation.  Sets all universal variables so that
+# subsequent sessions pick up the right defaults; conf.d/tide.fish overrides
+# the handful of layout/icon choices on each session start.
+fish -c "tide configure --auto \
+  --style='Classic' \
+  --prompt_colors='16 colors' \
+  --show_time='No' \
+  --classic_prompt_separators='Slanted' \
+  --powerline_prompt_heads='Slanted' \
+  --powerline_prompt_tails='Slanted' \
+  --powerline_prompt_style='One line' \
+  --prompt_spacing='Compact' \
+  --icons='Few icons' \
+  --transient='Yes'" > /dev/null

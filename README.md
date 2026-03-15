@@ -14,16 +14,19 @@ Managed with [chezmoi](https://www.chezmoi.io).
 1. Run the bootstrap command:
 
    ```bash
-   sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/YOUR_USERNAME/dotfiles.git
+   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /tmp init --apply gh:jcarter
    ```
 
-   This installs chezmoi and immediately clones and applies your dotfiles in one step.
+   `gh:jcarter` is a chezmoi shorthand for `https://github.com/jcarter/dotfiles`.
+   The bootstrap binary is installed to `/tmp` and is cleaned up automatically;
+   Homebrew owns the permanent chezmoi installation.
+
    You will be prompted for your name and email, then chezmoi will:
    - Install system dependencies (Linux only)
    - Install Homebrew
-   - Install fish, mise, starship, and ghostty (macOS) via Homebrew
+   - Install fish, mise, and ghostty (macOS) via Homebrew
    - Install erlang, elixir, node, rust, and go via mise
-   - Configure git, fish, and starship
+   - Configure git and fish
    - Set fish as your default shell (you will be prompted for your password)
 
 ## Updating
@@ -31,7 +34,13 @@ Managed with [chezmoi](https://www.chezmoi.io).
 After pulling changes to the dotfiles repo:
 
 ```bash
-chezmoi apply -v
+chezmoi update       # pull remote changes and apply
+```
+
+To upgrade chezmoi itself:
+
+```bash
+brew upgrade chezmoi # or: chezmoi upgrade
 ```
 
 ## Adding new dotfiles
