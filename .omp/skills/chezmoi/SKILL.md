@@ -1,6 +1,10 @@
 ---
 name: chezmoi
-description: Use when managing dotfiles with chezmoi, setting up new machines, creating templates for cross-platform configs, adding run scripts, or structuring a chezmoi source directory.
+description: Dotfile management with chezmoi. Covers source directory naming conventions (dot_, run_once_, run_onchange_, executable_, .tmpl), Go template syntax, cross-platform OS/arch conditionals, .chezmoidata for shared data, and new machine bootstrap. Use when adding dotfiles, writing templates, creating setup scripts, or bootstrapping a new machine.
+globs:
+  - "**/.chezmoi*"
+  - "**/.chezmoidata/**"
+  - "**/*.tmpl"
 ---
 
 # chezmoi
@@ -203,6 +207,7 @@ chezmoi init --apply $GITHUB_USERNAME
 
 ## Common Mistakes
 
+<avoid>
 | Mistake | Fix |
 |---------|-----|
 | Template syntax in non-`.tmpl` file | `{{ }}` rendered literally. Add `.tmpl` suffix. |
@@ -211,3 +216,4 @@ chezmoi init --apply $GITHUB_USERNAME
 | Empty template = deleted target | chezmoi removes target if template renders empty. Use `empty_` prefix to keep. |
 | Secrets in committed files | Use `chezmoi.toml` (local only) for secrets, reference via template vars. |
 | Homebrew path differs Linux vs macOS | Linux: `/home/linuxbrew/.linuxbrew/bin/brew`, macOS: `/opt/homebrew/bin/brew` (ARM) or `/usr/local/bin/brew` (Intel) |
+</avoid>
