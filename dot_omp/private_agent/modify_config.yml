@@ -1,0 +1,4 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $c := .chezmoi.stdin | fromYaml -}}
+{{- if not $c -}}{{- $c = fromYaml "{}" -}}{{- end -}}
+{{ $c | setValueAtPath "theme.dark" "dracula" | setValueAtPath "theme.light" "alucard" | toYaml -}}
