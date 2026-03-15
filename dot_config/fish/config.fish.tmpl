@@ -11,15 +11,6 @@ end
 if status is-interactive
     set -g fish_greeting
 
-    # Customize Tide prompt
-    set -gx tide_character_icon ▶
-    set -gx tide_left_prompt_items pwd git
-    set -gx tide_right_prompt_items status cmd_duration context jobs
-    set -gx tide_status_icon ✓
-    set -gx tide_status_icon_failure ✕
-    set -gx tide_jobs_icon ⋯
-    set -gx tide_git_truncation_length 50
-
     mise activate fish | source
     set -gx HOMEBREW_NO_AUTOREMOVE 1
     set -gx ERL_AFLAGS "-kernel shell_history enabled"
