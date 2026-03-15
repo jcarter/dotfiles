@@ -1,6 +1,7 @@
 packages:
   darwin:
     brews:
+      - chezmoi
       - mise
       - fish
       - starship
@@ -8,6 +9,7 @@ packages:
       - ghostty
   linux:
     brews:
+      - chezmoi
       - mise
       - fish
       - starship

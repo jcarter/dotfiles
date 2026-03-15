@@ -3,8 +3,8 @@
 {{ if eq .chezmoi.os "linux" -}}
 sudo apt update
 sudo apt install -y build-essential procps curl file git fontconfig
-
 {{ end -}}
+
 if ! command -v brew &>/dev/null; then
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
