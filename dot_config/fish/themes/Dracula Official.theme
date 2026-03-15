@@ -34,7 +34,7 @@ fish_color_valid_path --underline
 
 # Default Prompt Colors
 fish_color_cwd 50fa7b
-fish_color_cwd_root red
+fish_color_cwd_root ff5555
 fish_color_host bd93f9
 fish_color_host_remote bd93f9
 fish_color_user 8be9fd

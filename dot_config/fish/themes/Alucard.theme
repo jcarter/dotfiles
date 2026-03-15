@@ -1,0 +1,55 @@
+# Alucard Color Palette
+#
+# Foreground: 1f1f1f
+# Selection: cfcfde
+# Comment: 6c664b
+# Red: cb3a2a
+# Orange: a34d14
+# Yellow: 846e15
+# Green: 14710a
+# Purple: 644ac9
+# Cyan: 036a96
+# Pink: a3144d
+
+# Syntax Highlighting Colors
+fish_color_normal 1f1f1f
+fish_color_command 036a96
+fish_color_keyword a3144d
+fish_color_quote 846e15
+fish_color_redirection 1f1f1f
+fish_color_end a34d14
+fish_color_error cb3a2a
+fish_color_param 644ac9
+fish_color_comment 6c664b
+fish_color_selection --background=cfcfde
+fish_color_search_match --background=cfcfde
+fish_color_operator 14710a
+fish_color_escape a3144d
+fish_color_autosuggestion 6c664b
+fish_color_cancel cb3a2a --reverse
+fish_color_option a34d14
+fish_color_history_current --bold
+fish_color_status cb3a2a
+fish_color_valid_path --underline
+
+# Default Prompt Colors
+fish_color_cwd 14710a
+fish_color_cwd_root cb3a2a
+fish_color_host 644ac9
+fish_color_host_remote 644ac9
+fish_color_user 036a96
+
+# Completion Pager Colors
+fish_pager_color_progress 6c664b
+fish_pager_color_background
+fish_pager_color_prefix 036a96
+fish_pager_color_completion 1f1f1f
+fish_pager_color_description 6c664b
+fish_pager_color_selected_background --background=cfcfde
+fish_pager_color_selected_prefix 036a96
+fish_pager_color_selected_completion 1f1f1f
+fish_pager_color_selected_description 6c664b
+fish_pager_color_secondary_background
+fish_pager_color_secondary_prefix 036a96
+fish_pager_color_secondary_completion 1f1f1f
+fish_pager_color_secondary_description 6c664b

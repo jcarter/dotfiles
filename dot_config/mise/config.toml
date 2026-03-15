@@ -1,0 +1,6 @@
+[tools]
+erlang = "latest"
+elixir = "latest"
+node = "latest"
+rust = "latest"
+go = "latest"
