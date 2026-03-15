@@ -14,7 +14,7 @@ test "$SHELL" = "$FISH_PATH" || chsh -s "$FISH_PATH"
 # ~/.config/fish/themes -> fisher/themes symlink created by fisher_config.fish.
 fish -c 'fish_config theme choose "Dracula"'
 
-# One-time tide prompt initialisation.  Sets all universal variables so that
+# One-time tide prompt initialization.  Sets all universal variables so that
 # subsequent sessions pick up the right defaults; conf.d/tide.fish overrides
 # the handful of layout/icon choices on each session start.
 fish -c "tide configure --auto \
