@@ -1,0 +1,15 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+{{ if eq .chezmoi.arch "arm64" -}}
+eval "$(/opt/homebrew/bin/brew shellenv bash)"
+{{ else -}}
+eval "$(/usr/local/bin/brew shellenv bash)"
+{{ end -}}
+{{ else if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
+{{ end -}}
+FISH_PATH="$(brew --prefix)/bin/fish"
+
+grep -qF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells > /dev/null
+test "$SHELL" = "$FISH_PATH" || chsh -s "$FISH_PATH"

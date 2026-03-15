@@ -1,0 +1,5 @@
+theme = Dracula
+font-family = Hack Nerd Font JBM Ligatured
+
+keybind = alt+backspace=text:\x1b\x7f
+keybind = shift+enter=text:\n

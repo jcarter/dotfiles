@@ -4,6 +4,8 @@ packages:
       - mise
       - fish
       - starship
+    casks:
+      - ghostty
   linux:
     brews:
       - mise

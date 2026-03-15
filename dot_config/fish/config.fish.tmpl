@@ -1,0 +1,19 @@
+if status is-login
+{{ if eq .chezmoi.os "linux" -}}
+    eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv fish)
+{{ else if eq .chezmoi.arch "arm64" -}}
+    eval (/opt/homebrew/bin/brew shellenv fish)
+{{ else -}}
+    eval (/usr/local/bin/brew shellenv fish)
+{{ end -}}
+end
+
+if status is-interactive
+    set -g fish_greeting
+
+    mise activate fish | source
+    starship init fish | source
+
+    set -gx HOMEBREW_NO_AUTOREMOVE 1
+    set -gx ERL_AFLAGS "-kernel shell_history enabled"
+end
