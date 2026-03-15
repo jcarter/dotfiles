@@ -1,0 +1,28 @@
+#!/bin/bash
+# Generates fish completions for tools that support shell completion output.
+# Re-runs automatically when any managed tool version changes.
+#
+# To add a new tool:
+#   1. Add a version anchor comment below (guard optional tools with chezmoi lookPath)
+#   2. Add a generate call at the bottom of the script
+#
+# Versions (run_onchange_ anchors):
+# chezmoi: {{ output "chezmoi" "--version" }}
+# mise:    {{ output "mise" "--version" }}
+{{ template "brew-shellenv" . }}
+
+COMPLETIONS_DIR="$HOME/.config/fish/completions"
+mkdir -p "$COMPLETIONS_DIR"
+
+# generate <tool_name> <completion_cmd...>
+# Writes the completion command's stdout to $COMPLETIONS_DIR/<tool_name>.fish.
+# Silently skips if the tool is not found in PATH.
+generate() {
+    local tool="$1"; shift
+    if command -v "$tool" > /dev/null 2>&1; then
+        "$@" > "$COMPLETIONS_DIR/$tool.fish"
+    fi
+}
+
+generate chezmoi  chezmoi completion fish
+generate mise     mise completion fish
