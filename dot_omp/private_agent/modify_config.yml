@@ -1,4 +1,12 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- $c := .chezmoi.stdin | fromYaml -}}
 {{- if not $c -}}{{- $c = fromYaml "{}" -}}{{- end -}}
-{{ $c | setValueAtPath "theme.dark" "dracula" | setValueAtPath "theme.light" "alucard" | toYaml -}}
+{{- /* Managed fields — edit here to change defaults across machines. */ -}}
+{{- $c = $c | setValueAtPath "ask.timeout" 0 -}}
+{{- $c = $c | setValueAtPath "browser.headless" true -}}
+{{- $c = $c | setValueAtPath "disabledExtensions" (list) -}}
+{{- $c = $c | setValueAtPath "memories.enabled" true -}}
+{{- $c = $c | setValueAtPath "theme.dark" "dracula" -}}
+{{- $c = $c | setValueAtPath "theme.light" "alucard" -}}
+{{- /* modelRoles is intentionally unmanaged — differs per machine. */ -}}
+{{ $c | toYaml -}}
