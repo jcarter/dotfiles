@@ -22,6 +22,6 @@ palette = 13=#ff92df
 palette = 14=#a4ffff
 palette = 15=#ffffff
 
-
+font-family = IosevkaTerm Nerd Font Mono
 keybind = alt+backspace=text:\x1b\x7f
 keybind = shift+enter=text:\n
