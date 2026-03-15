@@ -6,8 +6,6 @@ packages:
       - fish
     casks:
       - ghostty
-      - font-jetbrains-mono
-      - font-symbols-only-nerd-font
       - font-iosevka-nerd-font
       - font-iosevka-term-nerd-font
   linux:
