@@ -1,0 +1,3 @@
+version: "1"
+pager: delta
+git_protocol: ssh
