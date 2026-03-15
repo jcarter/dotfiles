@@ -11,26 +11,20 @@ Managed with [chezmoi](https://www.chezmoi.io).
 
 ## Setup on a new machine
 
-1. Install chezmoi:
+1. Run the bootstrap command:
 
    ```bash
-   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
+   sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/YOUR_USERNAME/dotfiles.git
    ```
 
-2. Initialize and apply:
-
-   ```bash
-   chezmoi init --apply https://github.com/YOUR_USERNAME/dotfiles.git
-   ```
-
-   You will be prompted for your name and email. chezmoi will generate
-   `~/.config/chezmoi/chezmoi.toml` automatically, then apply your dotfiles.
-
-   This will automatically:
+   This installs chezmoi and immediately clones and applies your dotfiles in one step.
+   You will be prompted for your name and email, then chezmoi will:
    - Install system dependencies (Linux only)
    - Install Homebrew
-   - Install mise and fish via Homebrew
-   - Generate your `.gitconfig`
+   - Install fish, mise, starship, and ghostty (macOS) via Homebrew
+   - Install erlang, elixir, node, rust, and go via mise
+   - Configure git, fish, and starship
+   - Set fish as your default shell (you will be prompted for your password)
 
 ## Updating
 
