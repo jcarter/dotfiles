@@ -1,7 +1,0 @@
-{{ if eq .chezmoi.os "linux" -}}
-#!/bin/bash
-# Rebuild font cache after fonts change.
-# Embeds the latest release URL so this re-runs when a new font version is published.
-# font-release: {{ gitHubLatestReleaseAssetURL "gaplo917/Ligatured-Hack" "*.zip" }}
-fc-cache -fv
-{{ end -}}

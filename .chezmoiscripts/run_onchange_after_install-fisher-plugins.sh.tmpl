@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# fish_plugins: {{ include (joinPath .chezmoi.sourceDir "dot_config/fish/fish_plugins") | sha256sum }}
+
+fish -c "
+  if not functions -q fisher
+    curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+    fisher install jorgebucaran/fisher
+  end
+  fisher update
+"
+
+fish -c "tide configure --auto \
+  --style='Classic' \
+  --prompt_colors='16 colors' \
+  --show_time='No' \
+  --classic_prompt_separators='Slanted' \
+  --powerline_prompt_heads='Slanted' \
+  --powerline_prompt_tails='Slanted' \
+  --powerline_prompt_style='One line' \
+  --prompt_spacing='Compact' \
+  --icons='Few icons' \
+  --transient='Yes'" > /dev/null

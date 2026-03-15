@@ -4,12 +4,12 @@ packages:
       - chezmoi
       - mise
       - fish
-      - starship
     casks:
       - ghostty
+      - font-jetbrains-mono
+      - font-symbols-only-nerd-font
   linux:
     brews:
       - chezmoi
       - mise
       - fish
-      - starship
