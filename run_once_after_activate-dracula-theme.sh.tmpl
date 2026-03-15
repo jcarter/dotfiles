@@ -1,0 +1,11 @@
+#!/bin/bash
+{{ if eq .chezmoi.os "darwin" -}}
+{{ if eq .chezmoi.arch "arm64" -}}
+eval "$(/opt/homebrew/bin/brew shellenv bash)"
+{{ else -}}
+eval "$(/usr/local/bin/brew shellenv bash)"
+{{ end -}}
+{{ else if eq .chezmoi.os "linux" -}}
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
+{{ end -}}
+fish -c 'fish_config theme choose "Dracula Official"'
