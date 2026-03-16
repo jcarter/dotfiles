@@ -1,0 +1,17 @@
+{{- $mr := index . "modelRoles" | default dict -}}
+ask:
+  timeout: 0
+browser:
+  headless: true
+disabledExtensions: []
+memories:
+  enabled: true
+modelRoles:
+  commit: {{ get $mr "commit" | default "" | quote }}
+  default: {{ get $mr "default" | default "" | quote }}
+  plan: {{ get $mr "plan" | default "" | quote }}
+  slow: {{ get $mr "slow" | default "" | quote }}
+  smol: {{ get $mr "smol" | default "" | quote }}
+theme:
+  dark: dracula
+  light: alucard
