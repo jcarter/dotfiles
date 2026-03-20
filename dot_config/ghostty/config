@@ -1,6 +1,6 @@
 theme = dark:Dracula,light:Alucard
 
-font-family = Iosevka Nerd Font Mono
+font-family = Maple Mono NF
 font-size = 15
 
 keybind = alt+backspace=text:\x1b\x7f
