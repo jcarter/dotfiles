@@ -2,10 +2,11 @@ function ef_dark --description 'Switch to Everforest dark medium theme'
     set -U _ef_last_mode dark
     fish_config theme choose everforest-medium --color-theme=dark
     _tide_ef_dark
-    # Refresh Tide's cached escape sequences so the background render
-    # process inherits the updated separator and branch color values.
-    _tide_cache_variables
-    # Clear the repaint flag so the next fish_prompt spawns a fresh
-    # background job instead of displaying the stale cached result.
+    _tide_sub_reload  # re-sources fish_prompt.fish → rebakes _tide_pwd escape seqs with new universals
     set -e _tide_repaint
+    # Trigger a second render cycle so the fresh background job (spawned
+    # because _tide_repaint was cleared) runs immediately with the new
+    # universals. No-op if called during command execution; effective when
+    # called from the --on-variable event handler while at the prompt.
+    commandline -f repaint 2>/dev/null
 end
