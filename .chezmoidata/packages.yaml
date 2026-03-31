@@ -7,8 +7,9 @@ packages:
     casks:
       - ghostty
       - font-maple-mono-nf
-  linux:
-    brews:
+      - obsidian
+  arch:
+    pkgs:
       - chezmoi
       - mise
       - fish

@@ -1,0 +1,11 @@
+theme = dark:Everforest Dark Hard,light:Everforest Light Hard
+
+font-family = Maple Mono NF
+font-size = 15
+
+keybind = alt+backspace=text:\x1b\x7f
+keybind = shift+enter=text:\n
+{{ if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "arch") -}}
+# Omarchy: login shell is bash; launch fish explicitly in the terminal.
+command = /usr/bin/fish
+{{ end -}}

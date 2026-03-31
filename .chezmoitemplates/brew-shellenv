@@ -5,7 +5,7 @@
 {{- else -}}
 {{- $brewBin = "/usr/local/bin/brew" -}}
 {{- end -}}
-{{- else if eq .chezmoi.os "linux" -}}
-{{- $brewBin = "/home/linuxbrew/.linuxbrew/bin/brew" -}}
 {{- end -}}
+{{- if $brewBin }}
 eval "$({{ $brewBin }} shellenv bash)"
+{{ end -}}

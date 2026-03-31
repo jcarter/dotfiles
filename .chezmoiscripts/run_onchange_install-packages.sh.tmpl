@@ -1,6 +1,7 @@
 #!/bin/bash
-{{ template "brew-shellenv" . }}
+
 {{ if eq .chezmoi.os "darwin" -}}
+{{ template "brew-shellenv" . }}
 brew bundle --file=/dev/stdin <<EOF
 {{ range .packages.darwin.brews -}}
 brew {{ . | quote }}
@@ -9,10 +10,8 @@ brew {{ . | quote }}
 cask {{ . | quote }}
 {{ end -}}
 EOF
-{{ else if eq .chezmoi.os "linux" -}}
-brew bundle --file=/dev/stdin <<EOF
-{{ range .packages.linux.brews -}}
-brew {{ . | quote }}
-{{ end -}}
-EOF
+{{ else -}}
+# Arch Linux (Omarchy): install personal packages via pacman.
+# --needed is idempotent; already-installed packages are skipped.
+sudo pacman -S --noconfirm --needed {{ range .packages.arch.pkgs }}{{ . }} {{ end }}
 {{ end -}}
