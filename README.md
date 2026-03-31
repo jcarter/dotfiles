@@ -2,12 +2,64 @@
 
 Managed with [chezmoi](https://www.chezmoi.io).
 
-## What's included
+## What's installed
 
-- **Git** — global `.gitconfig` with templated email
-- **Homebrew** — auto-installed on macOS and Linux
-- **mise** — version manager for dev tools
-- **fish** — shell
+### Terminal & shell
+
+| App | How |
+|-----|-----|
+| [Ghostty](https://ghostty.org) | Homebrew cask (macOS) |
+| [fish](https://fishshell.com) | Homebrew |
+| [Maple Mono NF](https://github.com/subframe7536/maple-font) | Homebrew cask (macOS) |
+
+Fish plugins via [Fisher](https://github.com/jorgebucaran/fisher):
+
+| Plugin | Purpose |
+|--------|---------|
+| [Tide v6](https://github.com/IlanCosman/tide) | Prompt |
+| [autopair.fish](https://github.com/jorgebucaran/autopair.fish) | Auto-close brackets and quotes |
+| [pond](https://github.com/marcransome/pond) | Named environment management |
+| [fzf.fish](https://github.com/PatrickF1/fzf.fish) | Fuzzy-find history, files, processes |
+
+### Dev tools
+
+Managed by [mise](https://mise.jdx.dev) (installed via Homebrew):
+
+| Tool | Version |
+|------|---------|
+| Erlang | latest |
+| Elixir | latest |
+| Node | latest |
+| Rust | latest |
+| Go | latest |
+| [Oh My Pi](https://github.com/can1357/oh-my-pi) | latest |
+
+### Productivity
+
+| App | How |
+|-----|-----|
+| [Obsidian](https://obsidian.md) | Homebrew cask (macOS) |
+
+### Config managed
+
+| Tool | What's configured |
+|------|------------------|
+| Git | Global identity (name + email via chezmoi template), sensible defaults |
+| [gh](https://cli.github.com) | SSH protocol enforced (prevents `gh` from silently rewriting remotes to HTTPS) |
+| chezmoi | Installed via Homebrew so it self-updates with `brew upgrade` |
+
+---
+
+## Everforest theme
+
+All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest) palette that **automatically switches between dark and light** when macOS appearance changes — no manual toggle needed.
+
+| App | Dark variant | Light variant |
+|-----|-------------|---------------|
+| Ghostty | Everforest Dark Hard | Everforest Light Medium |
+| Fish syntax | everforest-medium dark | everforest-medium light |
+| Tide prompt | Full Everforest Dark Medium palette | Full Everforest Light Medium palette |
+| Oh My Pi | everforest-dark | everforest-light |
 
 ## Setup on a new machine
 
@@ -46,7 +98,7 @@ brew upgrade chezmoi # or: chezmoi upgrade
 ## Adding new dotfiles
 
 ```bash
-chezmoi add ~/.some_config          # plain file
+chezmoi add ~/.some_config             # plain file
 chezmoi add --template ~/.some_config  # file with template variables
 ```
 
