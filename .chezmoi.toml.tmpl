@@ -4,3 +4,16 @@
 [data]
     name = {{ $name | quote }}
     email = {{ $email | quote }}
+
+{{ $mrDefault := promptStringOnce . "modelRoles.default" "Model role: default" -}}
+{{- $mrCommit  := promptStringOnce . "modelRoles.commit"  "Model role: commit"  -}}
+{{- $mrPlan    := promptStringOnce . "modelRoles.plan"    "Model role: plan"    -}}
+{{- $mrSlow    := promptStringOnce . "modelRoles.slow"    "Model role: slow"    -}}
+{{- $mrSmol    := promptStringOnce . "modelRoles.smol"    "Model role: smol"    -}}
+
+[data.modelRoles]
+    default = {{ $mrDefault | quote }}
+    commit  = {{ $mrCommit  | quote }}
+    plan    = {{ $mrPlan    | quote }}
+    slow    = {{ $mrSlow    | quote }}
+    smol    = {{ $mrSmol    | quote }}
