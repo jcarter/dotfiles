@@ -1,0 +1,52 @@
+#!/bin/bash
+# macOS system defaults — applies only non-factory settings discovered on this machine.
+# Runs again automatically whenever this file changes (chezmoi hashes rendered content).
+# To force a re-run manually:
+#   chezmoi state delete-bucket --bucket=scriptState && chezmoi apply
+
+{{ if eq .chezmoi.os "darwin" -}}
+
+set -euo pipefail
+
+###############################################################################
+# NSGlobalDomain                                                              #
+###############################################################################
+
+# Dark mode — absent key = Light, present = Dark.
+defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
+
+###############################################################################
+# Dock                                                                        #
+###############################################################################
+
+# Compact icon size (factory: 48).
+defaults write com.apple.dock tilesize -int 30
+
+# Auto-hide the Dock (factory: false).
+defaults write com.apple.dock autohide -bool true
+
+# Instant show on hover — remove the 0.5 s hover delay and the 0.5 s animation.
+defaults write com.apple.dock autohide-delay -float 0
+defaults write com.apple.dock autohide-time-modifier -float 0.2
+
+###############################################################################
+# Finder                                                                      #
+###############################################################################
+
+# Show the path bar at the bottom of every Finder window (factory: false).
+defaults write com.apple.finder ShowPathbar -bool true
+
+# List view as the default instead of icon grid (factory: icnv).
+defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+
+###############################################################################
+# Restart affected services so changes take effect immediately               #
+###############################################################################
+
+killall Dock
+killall Finder
+# SystemUIServer owns the menu bar clock; restart it to pick up any
+# NSGlobalDomain changes (e.g. AppleInterfaceStyle).
+killall SystemUIServer
+
+{{ end -}}
