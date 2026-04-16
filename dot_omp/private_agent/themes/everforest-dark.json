@@ -30,7 +30,7 @@
     "error":              "red",
     "warning":            "orange",
     "muted":              "grey1",
-    "dim":                238,
+    "dim":                "grey0",
     "text":               "",
     "thinkingText":       "grey1",
 
@@ -72,7 +72,7 @@
     "syntaxOperator":     "orange",
     "syntaxPunctuation":  "grey1",
 
-    "thinkingOff":        238,
+    "thinkingOff":        "grey0",
     "thinkingMinimal":    241,
     "thinkingLow":        "purple",
     "thinkingMedium":     "aqua",

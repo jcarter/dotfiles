@@ -4,4 +4,15 @@ elixir = "latest"
 node = "latest"
 rust = "latest"
 go = "latest"
-"github:can1357/oh-my-pi" = "latest"
+
+[tools."github:can1357/oh-my-pi"]
+version = "latest"
+postinstall = """{%- set_global native_os = os() | replace(from="macos", to="darwin") | replace(from="windows", to="win32") -%}
+{%- if arch() == "x64" -%}
+{%- set_global native_suffix = native_os ~ "-x64-modern" -%}
+{%- else -%}
+{%- set_global native_suffix = native_os ~ "-" ~ arch() -%}
+{%- endif -%}
+curl -fsSL \
+    "https://github.com/can1357/oh-my-pi/releases/download/v$(mise latest github:can1357/oh-my-pi)/pi_natives.{{ native_suffix }}.node" \
+    -o "$(mise where github:can1357/oh-my-pi)/pi_natives.{{ native_suffix }}.node""""

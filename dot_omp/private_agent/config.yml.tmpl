@@ -1,9 +1,20 @@
 {{- $mr := index . "modelRoles" | default dict -}}
 ask:
   timeout: 0
+async:
+  enabled: true
 browser:
   headless: true
+calc:
+  enabled: true
+checkpoint:
+  enabled: true
+colorBlindMode: false
+dev:
+  autoqa: true
 disabledExtensions: []
+inspect_image:
+  enabled: true
 memories:
   enabled: true
 modelRoles:
@@ -12,6 +23,12 @@ modelRoles:
   plan: {{ get $mr "plan" | default "" | quote }}
   slow: {{ get $mr "slow" | default "" | quote }}
   smol: {{ get $mr "smol" | default "" | quote }}
+renderMermaid:
+  enabled: true
+secrets:
+  enabled: true
+task:
+  eager: true
 theme:
   dark: everforest-dark
   light: everforest-light
