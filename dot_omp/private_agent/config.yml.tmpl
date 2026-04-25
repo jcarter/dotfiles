@@ -10,11 +10,14 @@ calc:
 checkpoint:
   enabled: true
 colorBlindMode: false
+compaction:
+  handoffSaveToDisk: true
 dev:
   autoqa: true
 disabledExtensions: []
 inspect_image:
   enabled: true
+interruptMode: immediate
 memories:
   enabled: true
 modelRoles:
@@ -27,8 +30,11 @@ renderMermaid:
   enabled: true
 secrets:
   enabled: true
+steeringMode: one-at-a-time
 task:
   eager: true
+  isolation:
+    commits: generic
 theme:
   dark: everforest-dark
   light: everforest-light
