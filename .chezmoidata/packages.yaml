@@ -5,6 +5,7 @@ packages:
       - mise
       - fish
     casks:
+      - 1password
       - ghostty
       - font-maple-mono-nf
       - obsidian
