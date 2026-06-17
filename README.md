@@ -89,6 +89,17 @@ After pulling changes to the dotfiles repo:
 chezmoi update       # pull remote changes and apply
 ```
 
+### Updating Oh My Pi settings
+
+`~/.omp/agent/config.yml` is managed as a whole file. After changing settings through OMP, back up the live file into chezmoi before the next apply:
+
+```bash
+chezmoi diff ~/.omp/agent/config.yml
+chezmoi add ~/.omp/agent/config.yml
+```
+
+Use `chezmoi diff` first to review what OMP changed. If the live changes are not wanted, run `chezmoi apply ~/.omp/agent/config.yml` instead to restore the backed-up version.
+
 To upgrade chezmoi itself:
 
 ```bash

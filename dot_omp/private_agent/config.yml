@@ -1,0 +1,63 @@
+ask:
+  timeout: 0
+async:
+  enabled: true
+browser:
+  headless: true
+calc:
+  enabled: true
+checkpoint:
+  enabled: true
+colorBlindMode: false
+compaction:
+  handoffSaveToDisk: true
+dev:
+  autoqa: false
+disabledExtensions: []
+inspect_image:
+  enabled: true
+interruptMode: immediate
+memories:
+  enabled: true
+modelRoles:
+  commit: openai-codex/gpt-5.5:off
+  default: openai-codex/gpt-5.5:high
+  plan: openai-codex/gpt-5.5:xhigh
+  slow: openai-codex/gpt-5.5:xhigh
+  smol: openai-codex/gpt-5.4-mini:high
+renderMermaid:
+  enabled: true
+secrets:
+  enabled: true
+steeringMode: one-at-a-time
+task:
+  eager: true
+  isolation:
+    commits: generic
+    mode: none
+theme:
+  dark: everforest-dark
+  light: everforest-light
+memory:
+  backend: local
+setupVersion: 1
+symbolPreset: nerd
+statusLine:
+  preset: default
+display:
+  showTokenUsage: false
+hideThinkingBlock: false
+followUpMode: one-at-a-time
+loop:
+  mode: prompt
+stt:
+  enabled: true
+  modelName: base.en
+tools:
+  approvalMode: yolo
+edit:
+  mode: hashline
+tts:
+  enabled: false
+todo:
+  eager: false
