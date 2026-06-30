@@ -6,6 +6,7 @@ packages:
       - fish
     casks:
       - 1password
+      - 1password-cli
       - ghostty
       - font-maple-mono-nf
       - obsidian
