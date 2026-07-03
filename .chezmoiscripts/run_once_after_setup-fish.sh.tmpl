@@ -15,9 +15,8 @@ grep -qF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells
 test "$SHELL" = "$FISH_PATH" || chsh -s "$FISH_PATH"
 {{ end -}}
 
-# Apply the Dracula theme. The theme file lives at
-# dot_config/fish/fisher/themes/Dracula.theme and is surfaced via the
-# ~/.config/fish/themes -> fisher/themes symlink created by fisher_config.fish.
+# Apply the Everforest medium Fish syntax theme. Subsequent sessions switch
+# between its dark and light variants from conf.d/color-theme.fish.
 fish -c 'fish_config theme choose "everforest-medium"'
 
 # One-time tide prompt initialization.  Sets all universal variables so that

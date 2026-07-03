@@ -32,6 +32,7 @@ Managed by [mise](https://mise.jdx.dev) (installed via Homebrew):
 | Node | latest |
 | Rust | latest |
 | Go | latest |
+| Herdr | latest |
 | [Oh My Pi](https://github.com/can1357/oh-my-pi) | latest |
 
 ### Productivity
