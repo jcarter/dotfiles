@@ -10,8 +10,4 @@ brew {{ . | quote }}
 cask {{ . | quote }}
 {{ end -}}
 EOF
-{{ else -}}
-# Arch Linux (Omarchy): install personal packages via pacman.
-# --needed is idempotent; already-installed packages are skipped.
-sudo pacman -S --noconfirm --needed {{ range .packages.arch.pkgs }}{{ . }} {{ end }}
 {{ end -}}

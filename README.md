@@ -1,6 +1,6 @@
 # Dotfiles
 
-Managed with [chezmoi](https://www.chezmoi.io).
+Managed with [chezmoi](https://www.chezmoi.io) as a macOS-only dotfiles repo.
 
 ## What's installed
 
@@ -32,7 +32,7 @@ Managed by [mise](https://mise.jdx.dev) (installed via Homebrew):
 | Node | latest |
 | Rust | latest |
 | Go | latest |
-| Herdr | latest |
+| [Herdr](https://github.com/ogulcancelik/herdr) | latest |
 | [Oh My Pi](https://github.com/can1357/oh-my-pi) | latest |
 
 ### Productivity
@@ -62,7 +62,7 @@ All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest)
 | Tide prompt | Full Everforest Dark Medium palette | Full Everforest Light Medium palette |
 | Oh My Pi | everforest-dark | everforest-light |
 
-## Setup on a new machine
+## Setup on a new Mac
 
 1. Run the bootstrap command:
 
@@ -75,9 +75,8 @@ All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest)
    Homebrew owns the permanent chezmoi installation.
 
    You will be prompted for your name and email, then chezmoi will:
-   - Install system dependencies (Linux only)
    - Install Homebrew
-   - Install fish, mise, and ghostty (macOS) via Homebrew
+   - Install fish, mise, and ghostty via Homebrew
    - Install erlang, elixir, node, rust, and go via mise
    - Configure git and fish
    - Set fish as your default shell (you will be prompted for your password)
@@ -116,41 +115,21 @@ chezmoi add --template ~/.some_config  # file with template variables
 
 ## Testing
 
-Uses a Docker container as a clean Linux environment. Requires Docker.
+Run these checks locally on macOS before applying broad changes:
 
 ```bash
-# 1. Tear down any existing container
-docker stop chezmoi-test && docker rm chezmoi-test
+# Diagnose chezmoi configuration and environment issues.
+chezmoi doctor
 
-# 2. Spin up fresh Ubuntu with dotfiles mounted read-only
-docker run -d --name chezmoi-test -v "$(pwd)":/dotfiles:ro ubuntu:latest sleep infinity
+# Confirm template data is available for the current Mac.
+chezmoi data
 
-# 3. Bootstrap the container (minimal prereqs only)
-docker exec chezmoi-test bash -c '
-apt update && apt install -y curl sudo &&
-useradd -m -s /bin/bash testuser &&
-echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers &&
-sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
-'
+# Preview changes that would be applied to this Mac.
+chezmoi diff
 
-# 4. Set up chezmoi as testuser and apply
-#    The config is written manually here because this test flow copies files
-#    directly and calls 'chezmoi apply', bypassing 'chezmoi init' (which is
-#    what normally triggers .chezmoi.toml.tmpl on a real new machine).
-docker exec chezmoi-test su - testuser -c '
-mkdir -p ~/.local/share/chezmoi ~/.config/chezmoi &&
-cp -r /dotfiles/. ~/.local/share/chezmoi/ &&
-cat > ~/.config/chezmoi/chezmoi.toml <<EOF
-[data]
-    name = "Justin"
-    email = "justin@example.com"
-EOF
-chezmoi apply -v
-'
+# Render sensitive or templated files without writing them.
+chezmoi cat ~/.gitconfig
+chezmoi cat ~/.omp/agent/config.yml
 ```
 
-To re-test after editing files locally without rebuilding the container:
-
-```bash
-docker exec chezmoi-test su - testuser -c 'cp -r /dotfiles/. ~/.local/share/chezmoi/ && chezmoi apply -v'
-```
+For a full setup smoke test on the current Mac, review `chezmoi diff` first, then run `chezmoi apply -v`.

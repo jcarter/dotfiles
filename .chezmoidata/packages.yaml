@@ -10,8 +10,3 @@ packages:
       - ghostty
       - font-maple-mono-nf
       - obsidian
-  arch:
-    pkgs:
-      - chezmoi
-      - mise
-      - fish
