@@ -15,10 +15,6 @@ grep -qF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells
 test "$SHELL" = "$FISH_PATH" || chsh -s "$FISH_PATH"
 {{ end -}}
 
-# Apply the Everforest medium Fish syntax theme. Subsequent sessions switch
-# between its dark and light variants from conf.d/color-theme.fish.
-fish -c 'fish_config theme choose "everforest-medium"'
-
 # One-time tide prompt initialization.  Sets all universal variables so that
 # subsequent sessions pick up the right defaults; conf.d/tide.fish overrides
 # the handful of layout/icon choices on each session start.
