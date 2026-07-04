@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+secretKeys=(
+  "hindsightApiUrl"
+)
+onePasswordRefs=(
+  "op://Private/Hindsight/hostname"
+)
+
+targetRelativePath="dot_omp/private_agent/config.yml.tmpl"
+liveConfigPath="${OMP_CONFIG_PATH:-"$HOME/.omp/agent/config.yml"}"
+chezmoiSourceDir="${CHEZMOI_SOURCE_DIR:-"$HOME/.local/share/chezmoi"}"
+targetPath="$chezmoiSourceDir/$targetRelativePath"
+
+escapeGlobPattern() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\*/\\*}"
+  value="${value//\?/\\?}"
+  value="${value//\[/\\[}"
+  printf '%s\n' "$value"
+}
+
+config="$(<"$liveConfigPath")"
+
+for index in "${!secretKeys[@]}"; do
+  key="${secretKeys[$index]}"
+  ref="${onePasswordRefs[$index]}"
+  secret_value="$(op read "$ref")"
+  template_value="{{ onepasswordRead \"$ref\" | quote }}"
+  secret_pattern="$(escapeGlobPattern "$secret_value")"
+  config="${config//$secret_pattern/$template_value}"
+done
+
+mkdir -p "$(dirname "$targetPath")"
+printf '%s' "$config" > "$targetPath"
+printf '%s\n' "$targetPath"

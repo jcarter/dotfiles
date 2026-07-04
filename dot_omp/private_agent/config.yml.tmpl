@@ -31,7 +31,7 @@ secrets:
   enabled: true
 steeringMode: one-at-a-time
 task:
-  eager: true
+  eager: always
   isolation:
     commits: generic
     mode: none
@@ -39,7 +39,7 @@ theme:
   dark: everforest-dark
   light: everforest-light
 memory:
-  backend: local
+  backend: hindsight
 setupVersion: 1
 symbolPreset: nerd
 statusLine:
@@ -53,6 +53,7 @@ loop:
 stt:
   enabled: true
   modelName: base.en
+  submitTrigger: never
 tools:
   approvalMode: yolo
 edit:
@@ -60,4 +61,12 @@ edit:
 tts:
   enabled: false
 todo:
-  eager: false
+  eager: default
+hindsight:
+  apiUrl: {{ onepasswordRead "op://Private/Hindsight/hostname" | quote }}
+  bankId: Code
+  scoping: per-project-tagged
+magicKeywords:
+  enabled: true
+features:
+  unexpectedStopDetection: false

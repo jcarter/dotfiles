@@ -91,14 +91,20 @@ chezmoi update       # pull remote changes and apply
 
 ### Updating Oh My Pi settings
 
-`~/.omp/agent/config.yml` is managed as a whole file. After changing settings through OMP, back up the live file into chezmoi before the next apply:
+`~/.omp/agent/config.yml` is rendered from `dot_omp/private_agent/config.yml.tmpl`. `omp-sync-settings` is a small bash helper that reads configured 1Password refs with `op read`, then replaces matching rendered values in the live OMP config with `{{ onepasswordRead "$ref" | quote }}` template expressions before writing the source template.
+
+After changing settings through OMP, sync the live non-secret changes back into the template with the helper, then review the rendered result:
 
 ```bash
+omp-sync-settings
 chezmoi diff ~/.omp/agent/config.yml
-chezmoi add ~/.omp/agent/config.yml
 ```
 
-Use `chezmoi diff` first to review what OMP changed. If the live changes are not wanted, run `chezmoi apply ~/.omp/agent/config.yml` instead to restore the backed-up version.
+If the diff looks right, apply and commit as normal. If the live changes are not wanted, run `chezmoi apply ~/.omp/agent/config.yml` instead to restore the rendered version from chezmoi.
+
+Do not run `chezmoi add ~/.omp/agent/config.yml` for this file. A raw add can copy rendered protected values back into the source and remove the template protection.
+
+To protect another OMP value, add another semantic key -> 1Password ref entry to the helper mapping, such as `hindsightApiUrl` -> `op://Private/Hindsight API/url`. Then let OMP write the live value, run `omp-sync-settings`, and review `chezmoi diff ~/.omp/agent/config.yml` before committing.
 
 To upgrade chezmoi itself:
 
