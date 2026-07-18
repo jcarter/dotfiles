@@ -6,7 +6,7 @@ secretKeys=(
   "hindsightApiUrl"
 )
 onePasswordRefs=(
-  "op://Private/Hindsight/hostname"
+  "op://Dev/Hindsight/API URL"
 )
 
 targetRelativePath="dot_omp/private_agent/config.yml.tmpl"

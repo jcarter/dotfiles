@@ -12,8 +12,10 @@ colorBlindMode: false
 compaction:
   handoffSaveToDisk: true
 dev:
-  autoqa: false
-disabledExtensions: []
+  autoqa:
+    consent: denied
+disabledExtensions:
+  []
 inspect_image:
   enabled: true
 interruptMode: immediate
@@ -21,10 +23,10 @@ memories:
   enabled: true
 modelRoles:
   commit: openai-codex/gpt-5.5:off
-  default: openai-codex/gpt-5.5:high
-  plan: openai-codex/gpt-5.5:xhigh
+  default: openai-codex/gpt-5.6-terra:high
+  plan: openai-codex/gpt-5.6-sol:xhigh
   slow: openai-codex/gpt-5.5:xhigh
-  smol: openai-codex/gpt-5.4-mini:high
+  smol: openai-codex/gpt-5.6-luna:high
 renderMermaid:
   enabled: true
 secrets:
@@ -63,10 +65,12 @@ tts:
 todo:
   eager: default
 hindsight:
-  apiUrl: {{ onepasswordRead "op://Private/Hindsight/hostname" | quote }}
+  apiUrl: {{ onepasswordRead "op://Dev/Hindsight/API URL" | quote }}
   bankId: Code
   scoping: per-project-tagged
 magicKeywords:
   enabled: true
 features:
   unexpectedStopDetection: false
+power:
+  sleepPrevention: system
