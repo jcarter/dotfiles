@@ -6,8 +6,10 @@ brew bundle --file=/dev/stdin <<EOF
 {{ range .packages.darwin.brews -}}
 brew {{ . | quote }}
 {{ end -}}
+{{ if or (not (hasKey . "install_casks")) .install_casks -}}
 {{ range .packages.darwin.casks -}}
 cask {{ . | quote }}
+{{ end -}}
 {{ end -}}
 EOF
 {{ end -}}

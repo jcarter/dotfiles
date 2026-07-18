@@ -70,6 +70,12 @@ All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest)
    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /tmp init --apply gh:jcarter
    ```
 
+   To skip Homebrew casks while preserving Homebrew formula installs, run:
+
+   ```bash
+   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /tmp init --apply --override-data '{"install_casks":false}' gh:jcarter
+   ```
+
    `gh:jcarter` is a chezmoi shorthand for `https://github.com/jcarter/dotfiles`.
    The bootstrap binary is installed to `/tmp` and is cleaned up automatically;
    Homebrew owns the permanent chezmoi installation.
@@ -104,7 +110,7 @@ If the diff looks right, apply and commit as normal. If the live changes are not
 
 Do not run `chezmoi add ~/.omp/agent/config.yml` for this file. A raw add can copy rendered protected values back into the source and remove the template protection.
 
-To protect another OMP value, add another semantic key -> 1Password ref entry to the helper mapping, such as `hindsightApiUrl` -> `op://Private/Hindsight API/url`. Then let OMP write the live value, run `omp-sync-settings`, and review `chezmoi diff ~/.omp/agent/config.yml` before committing.
+To protect another OMP value, add another semantic key -> 1Password ref entry to the helper mapping, such as `hindsightApiUrl` -> `op://Dev/Hindsight/API URL`. Then let OMP write the live value, run `omp-sync-settings`, and review `chezmoi diff ~/.omp/agent/config.yml` before committing.
 
 To upgrade chezmoi itself:
 
