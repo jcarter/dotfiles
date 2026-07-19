@@ -73,14 +73,15 @@ All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest)
    To skip Homebrew casks while preserving Homebrew formula installs, run:
 
    ```bash
-   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /tmp init --apply --override-data '{"install_casks":false}' gh:jcarter
+   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /tmp init --apply --promptBool install_casks=false gh:jcarter
    ```
 
    `gh:jcarter` is a chezmoi shorthand for `https://github.com/jcarter/dotfiles`.
    The bootstrap binary is installed to `/tmp` and is cleaned up automatically;
    Homebrew owns the permanent chezmoi installation.
 
-   You will be prompted for your name and email, then chezmoi will:
+   You will be prompted for your name, email, and whether to install Homebrew
+   casks (default: yes), then chezmoi will:
    - Install Homebrew
    - Install fish, mise, and ghostty via Homebrew
    - Install erlang, elixir, node, rust, and go via mise
