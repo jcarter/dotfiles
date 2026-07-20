@@ -7,6 +7,6 @@ packages:
     casks:
       - 1password
       - 1password-cli
-      - ghostty
+      - kitty
       - font-maple-mono-nf
       - obsidian

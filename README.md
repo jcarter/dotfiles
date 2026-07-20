@@ -8,7 +8,7 @@ Managed with [chezmoi](https://www.chezmoi.io) as a macOS-only dotfiles repo.
 
 | App | How |
 |-----|-----|
-| [Ghostty](https://ghostty.org) | Homebrew cask (macOS) |
+| [Kitty](https://sw.kovidgoyal.net/kitty/) | Homebrew cask (macOS) |
 | [fish](https://fishshell.com) | Homebrew |
 | [Maple Mono NF](https://github.com/subframe7536/maple-font) | Homebrew cask (macOS) |
 
@@ -57,7 +57,7 @@ All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest)
 
 | App | Dark variant | Light variant |
 |-----|-------------|---------------|
-| Ghostty | Everforest Dark Hard | Everforest Light Medium |
+| Kitty | Everforest Dark Hard | Everforest Light Medium |
 | Fish syntax | everforest-medium dark | everforest-medium light |
 | Tide prompt | Full Everforest Dark Medium palette | Full Everforest Light Medium palette |
 | Oh My Pi | everforest-dark | everforest-light |
@@ -83,7 +83,7 @@ All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest)
    You will be prompted for your name, email, and whether to install Homebrew
    casks (default: yes), then chezmoi will:
    - Install Homebrew
-   - Install fish, mise, and ghostty via Homebrew
+   - Install fish, mise, and kitty via Homebrew
    - Install erlang, elixir, node, rust, and go via mise
    - Configure git and fish
    - Set fish as your default shell (you will be prompted for your password)
