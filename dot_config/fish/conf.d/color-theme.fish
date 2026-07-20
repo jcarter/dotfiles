@@ -10,8 +10,8 @@ if status is-interactive
 
     # ── Primary: instant detection via terminal background query ───────────────
     # Fish 4.3+ sets fish_terminal_color_theme when the terminal reports a
-    # background-color change via OSC 11. Ghostty sends this automatically
-    # when its dark:/light: theme pair switches on macOS appearance toggle.
+    # background-color change via OSC 11. Kitty sends this automatically
+    # when its automatic dark/light theme switches on macOS appearance toggle.
     # Zero forks, fires at exactly the right moment.
     function _ef_on_color_theme_change --on-variable fish_terminal_color_theme
         switch $fish_terminal_color_theme
