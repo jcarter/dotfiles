@@ -34,6 +34,7 @@ Managed by [mise](https://mise.jdx.dev) (installed via Homebrew):
 | Go | latest |
 | [Herdr](https://github.com/ogulcancelik/herdr) | latest |
 | [Oh My Pi](https://github.com/can1357/oh-my-pi) | latest |
+| [Pi](https://pi.dev) | latest |
 
 ### Productivity
 
