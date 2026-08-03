@@ -10,6 +10,7 @@ Managed with [chezmoi](https://www.chezmoi.io) as a macOS-only dotfiles repo.
 |-----|-----|
 | [Kitty](https://sw.kovidgoyal.net/kitty/) | Homebrew cask (macOS) |
 | [fish](https://fishshell.com) | Homebrew |
+| [Git](https://git-scm.com) | Homebrew |
 | [Maple Mono NF](https://github.com/subframe7536/maple-font) | Homebrew cask (macOS) |
 
 Fish plugins via [Fisher](https://github.com/jorgebucaran/fisher):
@@ -32,6 +33,11 @@ Managed by [mise](https://mise.jdx.dev) (installed via Homebrew):
 | Node | latest |
 | Rust | latest |
 | Go | latest |
+| [bat](https://github.com/sharkdp/bat) | latest |
+| [delta](https://github.com/dandavison/delta) | latest |
+| [fd](https://github.com/sharkdp/fd) | latest |
+| [fzf](https://github.com/junegunn/fzf) | latest |
+| [GitHub CLI](https://cli.github.com) | latest |
 | [Herdr](https://github.com/ogulcancelik/herdr) | latest |
 | [Oh My Pi](https://github.com/can1357/oh-my-pi) | latest |
 | [Pi](https://pi.dev) | latest |
@@ -84,8 +90,8 @@ All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest)
    You will be prompted for your name, email, and whether to install Homebrew
    casks (default: yes), then chezmoi will:
    - Install Homebrew
-   - Install fish, mise, and kitty via Homebrew
-   - Install erlang, elixir, node, rust, and go via mise
+   - Install Git, fish, and mise via Homebrew, plus Kitty when casks are enabled
+   - Install the configured languages and developer CLIs via mise
    - Configure git and fish
    - Set fish as your default shell (you will be prompted for your password)
 
