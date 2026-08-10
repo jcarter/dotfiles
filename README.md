@@ -1,155 +1,97 @@
 # Dotfiles
 
-Managed with [chezmoi](https://www.chezmoi.io) as a macOS-only dotfiles repo.
+Run one command on a fresh Mac:
 
-## What's installed
+```sh
+curl -fsSL https://raw.githubusercontent.com/jcarter/dotfiles/main/install.sh | bash -s -- personal
+# or
+curl -fsSL https://raw.githubusercontent.com/jcarter/dotfiles/main/install.sh | bash -s -- work
+```
 
-### Terminal & shell
+The installer clones to `~/Source/dotfiles`. Set `DOTFILES_DIR` to use another path:
 
-| App | How |
-|-----|-----|
-| [Kitty](https://sw.kovidgoyal.net/kitty/) | Homebrew cask (macOS) |
-| [fish](https://fishshell.com) | Homebrew |
-| [Git](https://git-scm.com) | Homebrew |
-| [Maple Mono NF](https://github.com/subframe7536/maple-font) | Homebrew cask (macOS) |
+```sh
+curl -fsSL https://raw.githubusercontent.com/jcarter/dotfiles/main/install.sh |
+  DOTFILES_DIR="$HOME/elsewhere/dotfiles" bash -s -- personal
+```
 
-Fish plugins via [Fisher](https://github.com/jorgebucaran/fisher):
+Personal setup pauses for 1Password. Sign in, then enable **Settings > Developer > Integrate with 1Password CLI**.
 
-| Plugin | Purpose |
-|--------|---------|
-| [Tide v6](https://github.com/IlanCosman/tide) | Prompt |
-| [autopair.fish](https://github.com/jorgebucaran/autopair.fish) | Auto-close brackets and quotes |
-| [pond](https://github.com/marcransome/pond) | Named environment management |
-| [fzf.fish](https://github.com/PatrickF1/fzf.fish) | Fuzzy-find history, files, processes |
+## Move from chezmoi
 
-### Dev tools
+1. Review live changes that chezmoi has not captured:
 
-Managed by [mise](https://mise.jdx.dev) (installed via Homebrew):
-
-| Tool | Version |
-|------|---------|
-| Erlang | latest |
-| Elixir | latest |
-| Node | latest |
-| Rust | latest |
-| Go | latest |
-| [bat](https://github.com/sharkdp/bat) | latest |
-| [delta](https://github.com/dandavison/delta) | latest |
-| [fd](https://github.com/sharkdp/fd) | latest |
-| [fzf](https://github.com/junegunn/fzf) | latest |
-| [GitHub CLI](https://cli.github.com) | latest |
-| [Herdr](https://github.com/ogulcancelik/herdr) | latest |
-| [Oh My Pi](https://github.com/can1357/oh-my-pi) | latest |
-| [Pi](https://pi.dev) | latest |
-
-### Productivity
-
-| App | How |
-|-----|-----|
-| [Obsidian](https://obsidian.md) | Homebrew cask (macOS) |
-
-### Config managed
-
-| Tool | What's configured |
-|------|------------------|
-| Git | Global identity (name + email via chezmoi template), sensible defaults |
-| [gh](https://cli.github.com) | SSH protocol enforced (prevents `gh` from silently rewriting remotes to HTTPS) |
-| chezmoi | Installed via Homebrew so it self-updates with `brew upgrade` |
-
----
-
-## Everforest theme
-
-All apps share a coordinated [Everforest](https://github.com/sainnhe/everforest) palette that **automatically switches between dark and light** when macOS appearance changes — no manual toggle needed.
-
-| App | Dark variant | Light variant |
-|-----|-------------|---------------|
-| Kitty | Everforest Dark Hard | Everforest Light Medium |
-| Fish syntax | everforest-medium dark | everforest-medium light |
-| Tide prompt | Full Everforest Dark Medium palette | Full Everforest Light Medium palette |
-| Oh My Pi | everforest-dark | everforest-light |
-
-## Setup on a new Mac
-
-1. Run the bootstrap command:
-
-   ```bash
-   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /tmp init --apply gh:jcarter
+   ```sh
+   chezmoi diff
    ```
 
-   To skip Homebrew casks while preserving Homebrew formula installs, run:
+2. Clone the mise version:
 
-   ```bash
-   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /tmp init --apply --promptBool install_casks=false gh:jcarter
+   ```sh
+   mkdir -p ~/Source
+   git clone git@github.com:jcarter/dotfiles.git ~/Source/dotfiles
+   cd ~/Source/dotfiles
    ```
 
-   `gh:jcarter` is a chezmoi shorthand for `https://github.com/jcarter/dotfiles`.
-   The bootstrap binary is installed to `/tmp` and is cleaned up automatically;
-   Homebrew owns the permanent chezmoi installation.
+3. Move machine-specific environment variables out of Fish:
 
-   You will be prompted for your name, email, and whether to install Homebrew
-   casks (default: yes), then chezmoi will:
-   - Install Homebrew
-   - Install Git, fish, and mise via Homebrew, plus Kitty when casks are enabled
-   - Install the configured languages and developer CLIs via mise
-   - Configure git and fish
-   - Set fish as your default shell (you will be prompted for your password)
+   ```sh
+   mkdir -p ~/.config/mise
+   $EDITOR ~/.config/mise/config.local.toml
+   ```
 
-## Updating
+   ```toml
+   [env]
+   DOTFILES_ROLE = "personal" # or "work"
+   # Add other non-secret variables here.
+   ```
 
-After pulling changes to the dotfiles repo:
+4. Preview the replacement of chezmoi-managed files:
 
-```bash
-chezmoi update       # pull remote changes and apply
-```
+   ```sh
+   mise trust -y -a
+   mise bootstrap dotfiles apply --dry-run --force --yes
+   ```
 
-### Updating Oh My Pi settings
+5. Apply the migration:
 
-`~/.omp/agent/config.yml` is rendered from `dot_omp/private_agent/config.yml.tmpl`. `omp-sync-settings` is a small bash helper that reads configured 1Password refs with `op read`, then replaces matching rendered values in the live OMP config with `{{ onepasswordRead "$ref" | quote }}` template expressions before writing the source template.
+   ```sh
+   ./install.sh personal --force-dotfiles
+   # Work Mac:
+   ./install.sh work --force-dotfiles
+   ```
 
-After changing settings through OMP, sync the live non-secret changes back into the template with the helper, then review the rendered result:
+Keep the old chezmoi source until the new setup works. Do not run `chezmoi apply` after migration.
 
-```bash
-omp-sync-settings
-chezmoi diff ~/.omp/agent/config.yml
-```
+## Use
 
-If the diff looks right, apply and commit as normal. If the live changes are not wanted, run `chezmoi apply ~/.omp/agent/config.yml` instead to restore the rendered version from chezmoi.
+Run commands from `~/Source/dotfiles`:
 
-Do not run `chezmoi add ~/.omp/agent/config.yml` for this file. A raw add can copy rendered protected values back into the source and remove the template protection.
+| Command | Result |
+|---|---|
+| `mise run check` | Report Git, Homebrew, and mise state |
+| `mise run sync` | Pull and apply changes |
+| `mise run update` | Upgrade packages and tools, then apply |
+| `mise run omp-render-settings` | Rebuild the live OMP config |
+| `mise run omp-sync-settings` | Save non-secret OMP changes |
 
-To protect another OMP value, add another semantic key -> 1Password ref entry to the helper mapping, such as `hindsightApiUrl` -> `op://Dev/Hindsight/API URL`. Then let OMP write the live value, run `omp-sync-settings`, and review `chezmoi diff ~/.omp/agent/config.yml` before committing.
+Edit an existing linked file under `~/.config`; the repository changes at once. Run `git status`, commit, and push. Add new managed files under `home/` and map them in `mise.toml`.
 
-To upgrade chezmoi itself:
+## Per-computer settings
 
-```bash
-brew upgrade chezmoi # or: chezmoi upgrade
-```
+The installer creates two untracked files:
 
-## Adding new dotfiles
+- `~/.config/mise/config.local.toml` holds `DOTFILES_ROLE` and non-secret environment variables.
+- `~/.config/git/config.local` holds Git name and email.
 
-```bash
-chezmoi add ~/.some_config             # plain file
-chezmoi add --template ~/.some_config  # file with template variables
-```
+Secrets stay in 1Password. Personal OMP uses Hindsight through fnox. Work OMP sets `memory.backend: off` without reading the Hindsight secret.
 
-## Testing
+## Files
 
-Run these checks locally on macOS before applying broad changes:
-
-```bash
-# Diagnose chezmoi configuration and environment issues.
-chezmoi doctor
-
-# Confirm template data is available for the current Mac.
-chezmoi data
-
-# Preview changes that would be applied to this Mac.
-chezmoi diff
-
-# Render sensitive or templated files without writing them.
-chezmoi cat ~/.gitconfig
-chezmoi cat ~/.omp/agent/config.yml
-```
-
-For a full setup smoke test on the current Mac, review `chezmoi diff` first, then run `chezmoi apply -v`.
+| Path | Purpose |
+|---|---|
+| `home/` | Files linked into `$HOME` |
+| `home/.config/mise/config.toml` | Global mise tools and environment |
+| `mise.toml` | Dotfile mappings and bootstrap order |
+| `.mise/tasks/` | Tasks for this repository |
+| `Brewfile` and `templates/` | Packages and generated-config sources |

@@ -1,0 +1,76 @@
+ask:
+  timeout: 0
+async:
+  enabled: true
+browser:
+  headless: true
+calc:
+  enabled: true
+checkpoint:
+  enabled: true
+colorBlindMode: false
+compaction:
+  handoffSaveToDisk: true
+dev:
+  autoqa:
+    consent: denied
+disabledExtensions:
+  []
+inspect_image:
+  enabled: true
+interruptMode: immediate
+memories:
+  enabled: true
+modelRoles:
+  commit: openai-codex/gpt-5.5:off
+  default: openai-codex/gpt-5.6-terra:high
+  plan: openai-codex/gpt-5.6-sol:xhigh
+  slow: openai-codex/gpt-5.5:xhigh
+  smol: openai-codex/gpt-5.6-luna:high
+renderMermaid:
+  enabled: true
+secrets:
+  enabled: true
+steeringMode: one-at-a-time
+task:
+  eager: always
+  isolation:
+    commits: generic
+    mode: none
+theme:
+  dark: everforest-dark
+  light: everforest-light
+memory:
+  backend: __OMP_MEMORY_BACKEND__
+setupVersion: 1
+symbolPreset: nerd
+statusLine:
+  preset: default
+display:
+  showTokenUsage: false
+hideThinkingBlock: false
+followUpMode: one-at-a-time
+loop:
+  mode: prompt
+stt:
+  enabled: true
+  modelName: base.en
+  submitTrigger: never
+tools:
+  approvalMode: yolo
+edit:
+  mode: hashline
+tts:
+  enabled: false
+todo:
+  eager: default
+hindsight:
+  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__
+  bankId: Code
+  scoping: per-project-tagged
+magicKeywords:
+  enabled: true
+features:
+  unexpectedStopDetection: false
+power:
+  sleepPrevention: system

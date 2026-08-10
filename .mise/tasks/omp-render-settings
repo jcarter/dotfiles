@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+#MISE description="Render OMP configuration for this machine role"
+
+# Render OMP's live configuration from the committed, non-secret source. The
+# machine role is deliberately supplied by mise from config.local.toml.
+set -euo pipefail
+
+readonly backendSentinel='__OMP_MEMORY_BACKEND__'
+readonly hindsightSentinel='__FNOX_OMP_HINDSIGHT_API_URL__'
+readonly sourceRelativePath='templates/omp/config.yml'
+
+role="${DOTFILES_ROLE:-}"
+case "$role" in
+  personal)
+    memoryBackend='hindsight'
+    ;;
+  work)
+    memoryBackend='off'
+    ;;
+  *)
+    printf '%s\n' 'DOTFILES_ROLE must be personal or work (set it in ~/.config/mise/config.local.toml).' >&2
+    exit 2
+    ;;
+esac
+
+scriptPath="${BASH_SOURCE[0]}"
+while [[ -L "$scriptPath" ]]; do
+  linkDir="$(cd -P "$(dirname "$scriptPath")" && pwd)"
+  linkTarget="$(readlink "$scriptPath")"
+  if [[ "$linkTarget" == /* ]]; then
+    scriptPath="$linkTarget"
+  else
+    scriptPath="$linkDir/$linkTarget"
+  fi
+done
+scriptDir="$(cd -P "$(dirname "$scriptPath")" && pwd)"
+defaultRepoRoot="$(cd "$scriptDir/../.." && pwd)"
+repoRoot="${DOTFILES_REPO_ROOT:-"$defaultRepoRoot"}"
+sourcePath="${OMP_TEMPLATE_PATH:-"$repoRoot/$sourceRelativePath"}"
+liveConfigPath="${OMP_CONFIG_PATH:-"$HOME/.omp/agent/config.yml"}"
+fnoxConfigPath="${FNOX_CONFIG_PATH:-"$HOME/.config/fnox/config.toml"}"
+fnoxBin="${FNOX_BIN:-fnox}"
+
+if [[ ! -f "$sourcePath" ]]; then
+  printf 'OMP template not found: %s\n' "$sourcePath" >&2
+  exit 1
+fi
+
+template="$(<"$sourcePath")"
+if [[ "$template" != *"$backendSentinel"* || "$template" != *"$hindsightSentinel"* ]]; then
+  printf '%s\n' 'OMP template is missing a required renderer sentinel.' >&2
+  exit 1
+fi
+
+yamlDoubleQuote() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  value="${value//$'\t'/\\t}"
+  printf '"%s"' "$value"
+}
+
+if [[ "$role" == personal ]]; then
+  hindsightApiUrl="$("$fnoxBin" --config "$fnoxConfigPath" get OMP_HINDSIGHT_API_URL)"
+  if [[ -z "$hindsightApiUrl" ]]; then
+    printf '%s\n' 'fnox returned an empty OMP_HINDSIGHT_API_URL.' >&2
+    exit 1
+  fi
+  hindsightValue="$(yamlDoubleQuote "$hindsightApiUrl")"
+else
+  hindsightValue='""'
+fi
+
+rendered="${template//$backendSentinel/$memoryBackend}"
+rendered="${rendered//$hindsightSentinel/$hindsightValue}"
+if [[ "$rendered" == *"$backendSentinel"* || "$rendered" == *"$hindsightSentinel"* ]]; then
+  printf '%s\n' 'OMP renderer left an unresolved sentinel.' >&2
+  exit 1
+fi
+
+umask 077
+targetDir="$(dirname "$liveConfigPath")"
+mkdir -p "$targetDir"
+temporaryPath="$(mktemp "$targetDir/.config.yml.XXXXXX")"
+trap 'rm -f "$temporaryPath"' EXIT
+printf '%s\n' "$rendered" > "$temporaryPath"
+chmod 600 "$temporaryPath"
+mv -f "$temporaryPath" "$liveConfigPath"
+trap - EXIT

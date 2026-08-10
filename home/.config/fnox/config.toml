@@ -1,0 +1,9 @@
+# Managed by mise dotfiles. This file contains only 1Password references, never
+# secret values. fnox uses the signed-in 1Password desktop/CLI session.
+env = false
+
+[providers]
+onepassword = { type = "1password" }
+
+[secrets]
+OMP_HINDSIGHT_API_URL = { provider = "onepassword", value = "op://Dev/Hindsight/API URL", env = false, if_missing = "error", description = "Personal OMP Hindsight API URL" }

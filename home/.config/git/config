@@ -1,0 +1,6 @@
+[include]
+	path = ~/.config/git/config.local
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
