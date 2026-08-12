@@ -1,25 +1,29 @@
 ---
 name: mise-dotfiles
-description: Manage this repository's macOS dotfiles, tools, Homebrew packages, machine roles, and bootstrap flow with mise. Use when changing tracked dotfiles, packages, per-machine configuration, or the personal/work OMP setup.
+description: Maintain and review this repository's mise-based macOS dotfiles lifecycle, including install.sh, mise configuration and tasks, home mappings, Brewfile ownership, machine roles, trust boundaries, and personal/work OMP rendering. Use for implementation, diagnosis, migration, or KISS and security review of bootstrap, sync, update, package, dotfile, or role changes.
 globs:
   - "mise*.toml"
   - "Brewfile"
   - "install.sh"
+  - "README.md"
   - "home/**"
   - ".mise/tasks/**"
+  - ".omp/skills/mise-dotfiles/**"
   - "lib/**"
   - "templates/**"
+  - "tests/**"
 ---
 
 # mise dotfiles
 
 ## Repository contract
 
-- `home/.config/mise/config.toml` declares global tools.
+- `home/.config/mise/config.toml` declares global tools and must remain plain data without executable repository logic.
 - `mise.toml` declares repository-local dotfile mappings, macOS defaults, and bootstrap ordering.
 - `home/` mirrors static files under the user's home directory.
 - `templates/` contains renderer inputs that must not be linked directly.
 - `Brewfile` owns system packages and GUI applications on both Macs.
+- `.mise/tasks/brew-bundle` is the sole Brewfile implementation; `install.sh`, `sync`, and `update` call it explicitly.
 - `mise.local.toml` is untracked and contains non-secret host differences, including `DOTFILES_ROLE = "personal"` or `"work"`.
 - Secrets stay in 1Password and are resolved through fnox. Never write secret values into tracked files or local mise configuration.
 
@@ -44,13 +48,28 @@ When adding a normal dotfile, put it under `home/` and add or extend its `[dotfi
 
 Do not link generated, secret-backed output. OMP's live `~/.omp/agent/config.yml` is rendered from `templates/omp/config.yml` after tools are installed. Its themes are static and may be linked from `home/.omp/agent/themes`.
 
+When changing installation, packages, or bootstrap behavior, trace `install.sh` through `brew-bundle`, `mise.toml`, and the `sync` and `update` tasks as one workflow. Keep one obvious owner for each operation; do not duplicate convergence in hooks or parallel implementations.
+
 ## Platform and role boundaries
 
 Architecture differences should be detected from Homebrew at runtime. Host-purpose differences belong in the untracked `mise.local.toml`; the role selects personal versus work behavior.
 
 ## Safety
 
+- Trust only the repository's root `mise.toml`. Never use `mise trust -a` or trust `home/.config/mise/config.toml`.
 - Do not run `mise run update` when only convergence is intended; it upgrades packages and tools.
 - Do not put credentials in `home/`, `templates/`, `mise*.toml`, or `Brewfile`.
 - Do not add the rendered OMP config to `[dotfiles]`.
-- Test changes with the repository checks before running a live bootstrap.
+- Do not run `sync`, `update`, or a live bootstrap solely to validate an edit.
+
+## Validation
+
+Run the smallest relevant checks from the repository root:
+
+- For installer, trust, Brewfile, or bootstrap changes: `tests/test-bootstrap.sh`.
+- For OMP renderer, sync, template, or role changes: `tests/test-omp-settings.sh`.
+- For Bash changes: `bash -n install.sh lib/utils.sh .mise/tasks/*`.
+- For Fish changes: `fish -n home/.config/fish/config.fish home/.config/fish/conf.d/*.fish home/.config/fish/functions/*.fish`.
+- For every change: `git diff --check`, `env MISE_TRUSTED_CONFIG_PATHS="$PWD" mise fmt --check`, and `env MISE_TRUSTED_CONFIG_PATHS="$PWD" mise tasks validate`.
+
+Use `MISE_TRUSTED_CONFIG_PATHS` only for validation so parsing the repository does not change machine trust. Run `mise run check` when current machine state is relevant; it is read-only but depends on the installed Homebrew and mise state.

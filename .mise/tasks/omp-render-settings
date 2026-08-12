@@ -2,7 +2,7 @@
 #MISE description="Render OMP configuration for this machine role"
 
 # Render OMP's live configuration from the committed, non-secret source. The
-# machine role is deliberately supplied by mise from config.local.toml.
+# machine role is deliberately supplied by mise from mise.local.toml.
 set -euo pipefail
 
 readonly backendSentinel='__OMP_MEMORY_BACKEND__'
@@ -18,7 +18,7 @@ case "$role" in
     memoryBackend='off'
     ;;
   *)
-    printf '%s\n' 'DOTFILES_ROLE must be personal or work (set it in ~/.config/mise/config.local.toml).' >&2
+    printf '%s\n' "DOTFILES_ROLE must be personal or work (set it in the repository's mise.local.toml)." >&2
     exit 2
     ;;
 esac
