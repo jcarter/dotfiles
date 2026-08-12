@@ -36,8 +36,7 @@ Personal setup pauses for 1Password. Sign in, then enable **Settings > Developer
 3. Move machine-specific environment variables out of Fish:
 
    ```sh
-   mkdir -p ~/.config/mise
-   $EDITOR ~/.config/mise/config.local.toml
+   $EDITOR mise.local.toml
    ```
 
    ```toml
@@ -49,7 +48,7 @@ Personal setup pauses for 1Password. Sign in, then enable **Settings > Developer
 4. Preview the replacement of chezmoi-managed files:
 
    ```sh
-   mise trust -y -a
+   mise trust -y ./mise.toml
    mise bootstrap dotfiles apply --dry-run --force --yes
    ```
 
@@ -81,7 +80,7 @@ Edit an existing linked file under `~/.config`; the repository changes at once. 
 
 The installer creates two untracked files:
 
-- `~/.config/mise/config.local.toml` holds `DOTFILES_ROLE` and non-secret environment variables.
+- `mise.local.toml` holds `DOTFILES_ROLE` and non-secret environment variables for this computer.
 - `~/.config/git/config.local` holds Git name and email.
 
 Secrets stay in 1Password. Personal OMP uses Hindsight through fnox. Work OMP sets `memory.backend: off` without reading the Hindsight secret.
@@ -91,7 +90,7 @@ Secrets stay in 1Password. Personal OMP uses Hindsight through fnox. Work OMP se
 | Path | Purpose |
 |---|---|
 | `home/` | Files linked into `$HOME` |
-| `home/.config/mise/config.toml` | Global mise tools and environment |
+| `home/.config/mise/config.toml` | Global mise tools |
 | `mise.toml` | Dotfile mappings and bootstrap order |
 | `.mise/tasks/` | Tasks for this repository |
 | `Brewfile` and `templates/` | Packages and generated-config sources |

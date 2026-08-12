@@ -1,5 +1,6 @@
-# Tools and shared environment available in every directory. install.sh links
-# this file to ~/.config/mise/config.toml; repository tasks stay in mise.toml.
+# Tools available in every directory. install.sh links this file to
+# ~/.config/mise/config.toml; repository tasks and local settings stay in the
+# repository's mise files.
 
 [tools]
 erlang = "latest"
@@ -16,6 +17,3 @@ herdr = "latest"
 fnox = "latest"
 "github:can1357/oh-my-pi" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
-
-[env]
-PATH = "{{env.HOME}}/.local/bin:{{env.PATH}}"

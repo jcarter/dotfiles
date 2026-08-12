@@ -26,9 +26,6 @@ NSGlobalDomain = { AppleInterfaceStyle = "Dark" }
 "~/.local/bin/omp-render-settings" = { source = ".mise/tasks/omp-render-settings", mode = "symlink" }
 "~/.local/bin/omp-sync-settings" = { source = ".mise/tasks/omp-sync-settings", mode = "symlink" }
 
-[bootstrap.hooks.pre-tools]
-run = ".mise/tasks/brew-bundle"
-
 [tasks.bootstrap]
 description = "Run idempotent post-bootstrap setup"
 run = [

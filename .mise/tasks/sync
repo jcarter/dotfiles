@@ -11,4 +11,5 @@ if [[ -n "$(git status --porcelain --untracked-files=normal)" ]]; then
 fi
 
 git pull --ff-only
+"$DOTFILES_REPO_ROOT/.mise/tasks/brew-bundle"
 mise bootstrap

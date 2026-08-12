@@ -15,12 +15,12 @@ globs:
 
 ## Repository contract
 
-- `home/.config/mise/config.toml` declares global tools and shared environment.
+- `home/.config/mise/config.toml` declares global tools.
 - `mise.toml` declares repository-local dotfile mappings, macOS defaults, and bootstrap ordering.
 - `home/` mirrors static files under the user's home directory.
 - `templates/` contains renderer inputs that must not be linked directly.
 - `Brewfile` owns system packages and GUI applications on both Macs.
-- `~/.config/mise/config.local.toml` is untracked and contains non-secret host differences, including `DOTFILES_ROLE = "personal"` or `"work"`.
+- `mise.local.toml` is untracked and contains non-secret host differences, including `DOTFILES_ROLE = "personal"` or `"work"`.
 - Secrets stay in 1Password and are resolved through fnox. Never write secret values into tracked files or local mise configuration.
 
 ## Commands
@@ -46,7 +46,7 @@ Do not link generated, secret-backed output. OMP's live `~/.omp/agent/config.yml
 
 ## Platform and role boundaries
 
-Architecture differences should be detected from Homebrew at runtime. Host-purpose differences belong in the untracked `config.local.toml`; the role selects personal versus work behavior.
+Architecture differences should be detected from Homebrew at runtime. Host-purpose differences belong in the untracked `mise.local.toml`; the role selects personal versus work behavior.
 
 ## Safety
 

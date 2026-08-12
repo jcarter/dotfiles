@@ -56,6 +56,15 @@ yamlDoubleQuote() {
   printf '"%s"' "$value"
 }
 
+escapeGlobPattern() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\*/\\*}"
+  value="${value//\?/\\?}"
+  value="${value//\[/\\[}"
+  printf '%s' "$value"
+}
+
 if [[ "$role" == personal ]]; then
   hindsightApiUrl="$("$fnoxBin" --config "$fnoxConfigPath" get OMP_HINDSIGHT_API_URL)"
   if [[ -z "$hindsightApiUrl" ]]; then
@@ -76,8 +85,9 @@ fi
 searchBackend="  backend: $expectedBackend"
 replaceBackend="  backend: $backendSentinel"
 replaceApiLine="  apiUrl: $hindsightSentinel"
+expectedApiPattern="$(escapeGlobPattern "$expectedApiLine")"
 config="${config//$searchBackend/$replaceBackend}"
-config="${config//$expectedApiLine/$replaceApiLine}"
+config="${config//$expectedApiPattern/$replaceApiLine}"
 if [[ "$config" != *"$backendSentinel"* || "$config" != *"$hindsightSentinel"* ]]; then
   printf '%s\n' 'OMP sync could not restore renderer sentinels.' >&2
   exit 1

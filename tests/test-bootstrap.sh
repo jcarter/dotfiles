@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-repoRoot="$(cd "$(dirname "$0")/.." && pwd)"
+sourceRepoRoot="$(cd "$(dirname "$0")/.." && pwd)"
 temporaryDir="$(mktemp -d)"
 trap 'rm -rf "$temporaryDir"' EXIT
 
@@ -11,7 +11,14 @@ fail() {
     exit 1
 }
 
-mkdir -p "$temporaryDir/bin" "$temporaryDir/home"
+repoRoot="$temporaryDir/repo"
+mkdir -p "$temporaryDir/bin" "$temporaryDir/home" "$repoRoot/home/.config/mise" "$repoRoot/.mise/tasks" "$repoRoot/lib"
+cp "$sourceRepoRoot/install.sh" "$repoRoot/install.sh"
+cp "$sourceRepoRoot/mise.toml" "$repoRoot/mise.toml"
+cp "$sourceRepoRoot/Brewfile" "$repoRoot/Brewfile"
+cp "$sourceRepoRoot/home/.config/mise/config.toml" "$repoRoot/home/.config/mise/config.toml"
+cp "$sourceRepoRoot/.mise/tasks/brew-bundle" "$repoRoot/.mise/tasks/brew-bundle"
+cp "$sourceRepoRoot/lib/utils.sh" "$repoRoot/lib/utils.sh"
 
 cat > "$temporaryDir/bin/brew" <<'EOF'
 #!/usr/bin/env bash
@@ -42,7 +49,7 @@ GIT_USER_NAME='Test User' \
 GIT_USER_EMAIL='test@example.com' \
 "$repoRoot/install.sh" personal >/dev/null
 
-localConfig="$temporaryDir/home/.config/mise/config.local.toml"
+localConfig="$repoRoot/mise.local.toml"
 gitConfig="$temporaryDir/home/.config/git/config.local"
 grep -Fqx 'DOTFILES_ROLE = "personal"' "$localConfig" || fail 'personal role was not written'
 [[ "$(git config --file "$gitConfig" user.name)" == 'Test User' ]] || fail 'Git name was not written'
@@ -50,7 +57,9 @@ grep -Fqx 'DOTFILES_ROLE = "personal"' "$localConfig" || fail 'personal role was
 [[ "$(readlink "$temporaryDir/home/.config/mise/config.toml")" == "$repoRoot/home/.config/mise/config.toml" ]] || fail 'global mise config was not linked'
 grep -Fqx 'brew install git mise' "$BOOTSTRAP_TEST_LOG" || fail 'bootstrap dependencies were not requested'
 grep -Fqx "brew bundle install --file=$repoRoot/Brewfile --no-upgrade" "$BOOTSTRAP_TEST_LOG" || fail 'Brewfile was not converged'
-grep -Fqx 'mise trust -y -a' "$BOOTSTRAP_TEST_LOG" || fail 'mise trust was not requested'
+[[ "$(grep -Fc 'brew bundle install ' "$BOOTSTRAP_TEST_LOG")" == 1 ]] || fail 'bootstrap converged the Brewfile more than once'
+grep -Fqx "mise trust -y $repoRoot/mise.toml" "$BOOTSTRAP_TEST_LOG" || fail 'repository mise config trust was not requested'
+[[ "$(grep -Fc 'mise trust ' "$BOOTSTRAP_TEST_LOG")" == 1 ]] || fail 'bootstrap trusted more than the repository config'
 grep -Fqx 'mise bootstrap --yes' "$BOOTSTRAP_TEST_LOG" || fail 'mise bootstrap was not requested'
 
 # The same role is idempotent. A conflicting role must never rewrite the file.
@@ -85,9 +94,11 @@ if [[ "${1:-}" == clone ]]; then
         target="$argument"
     done
     [[ -d "$(dirname "$target")" ]] || exit 9
-    mkdir -p "$target/.git" "$target/home/.config/mise"
+    mkdir -p "$target/.git" "$target/home/.config/mise" "$target/.mise/tasks" "$target/lib"
     cp "$BOOTSTRAP_TEST_REPO/mise.toml" "$target/mise.toml"
     cp "$BOOTSTRAP_TEST_REPO/home/.config/mise/config.toml" "$target/home/.config/mise/config.toml"
+    cp "$BOOTSTRAP_TEST_REPO/.mise/tasks/brew-bundle" "$target/.mise/tasks/brew-bundle"
+    cp "$BOOTSTRAP_TEST_REPO/lib/utils.sh" "$target/lib/utils.sh"
     : > "$target/Brewfile"
     printf 'git %s\n' "$*" >> "$BOOTSTRAP_TEST_LOG"
     exit 0

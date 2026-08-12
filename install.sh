@@ -129,9 +129,8 @@ readConfiguredRole() {
 }
 
 ensureRoleConfig() {
-    local configDir config configuredRole
-    configDir="${XDG_CONFIG_HOME:-$HOME/.config}/mise"
-    config="$configDir/config.local.toml"
+    local config configuredRole
+    config="$repoRoot/mise.local.toml"
 
     if [[ -e "$config" ]]; then
         configuredRole="$(readConfiguredRole "$config")"
@@ -153,7 +152,6 @@ ensureRoleConfig() {
         exit 2
     fi
 
-    mkdir -p "$configDir"
     (
         umask 077
         printf '%s\n' \
@@ -231,7 +229,7 @@ linkGlobalMiseConfig() {
 }
 
 installDeclaredPackages() {
-    brew bundle install --file="$repoRoot/Brewfile" --no-upgrade
+    "$repoRoot/.mise/tasks/brew-bundle"
 }
 
 prepareOnePassword() {
@@ -254,7 +252,7 @@ runBootstrap() {
     local -a args=(bootstrap --yes)
     [[ "$forceDotfiles" == true ]] && args+=(--force-dotfiles)
     cd "$repoRoot"
-    mise trust -y -a
+    mise trust -y "$repoRoot/mise.toml"
     mise "${args[@]}"
 }
 

@@ -27,12 +27,13 @@ assertNotContains() {
 
 mkdir -p "$temporaryDir/source/templates/omp" "$temporaryDir/live/agent" "$temporaryDir/bin"
 cp "$repoRoot/templates/omp/config.yml" "$temporaryDir/source/templates/omp/config.yml"
+protectedValue='https://hindsight.example/api?scope=prod*&set=[one]'
 
 cat > "$temporaryDir/bin/fnox" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 [[ "$1" == '--config' && "$3" == 'get' && "$4" == 'OMP_HINDSIGHT_API_URL' ]]
-printf '%s' 'fake-hindsight-secret'
+printf '%s' 'https://hindsight.example/api?scope=prod*&set=[one]'
 EOF
 chmod 700 "$temporaryDir/bin/fnox"
 
@@ -44,8 +45,8 @@ DOTFILES_ROLE=personal \
   "$repoRoot/.mise/tasks/omp-render-settings" > "$temporaryDir/personal.out"
 
 assertContains '  backend: hindsight' "$temporaryDir/live/agent/config.yml"
-assertContains '  apiUrl: "fake-hindsight-secret"' "$temporaryDir/live/agent/config.yml"
-assertNotContains 'fake-hindsight-secret' "$temporaryDir/personal.out"
+assertContains "  apiUrl: \"$protectedValue\"" "$temporaryDir/live/agent/config.yml"
+assertNotContains "$protectedValue" "$temporaryDir/personal.out"
 [[ "$(stat -f '%Lp' "$temporaryDir/live/agent/config.yml")" == '600' ]] || fail 'live config is not mode 0600'
 
 # Simulate an OMP-authored non-secret setting, then ensure sync keeps only the
@@ -61,8 +62,9 @@ DOTFILES_ROLE=personal \
 assertContains '  backend: __OMP_MEMORY_BACKEND__' "$temporaryDir/source/templates/omp/config.yml"
 assertContains '  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__' "$temporaryDir/source/templates/omp/config.yml"
 assertContains '  mode: interactive' "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains 'fake-hindsight-secret' "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains 'fake-hindsight-secret' "$temporaryDir/sync.out"
+assertContains '  bankId: Code' "$temporaryDir/source/templates/omp/config.yml"
+assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
+assertNotContains "$protectedValue" "$temporaryDir/sync.out"
 
 DOTFILES_ROLE=work \
   DOTFILES_REPO_ROOT="$temporaryDir/source" \
@@ -72,7 +74,7 @@ DOTFILES_ROLE=work \
 
 assertContains '  backend: off' "$temporaryDir/live/agent/config.yml"
 assertContains '  apiUrl: ""' "$temporaryDir/live/agent/config.yml"
-assertNotContains 'fake-hindsight-secret' "$temporaryDir/work.out"
+assertNotContains "$protectedValue" "$temporaryDir/work.out"
 
 # Installed commands are symlinks. They must still locate the repository when
 # called directly outside a mise task.
@@ -92,6 +94,6 @@ DOTFILES_ROLE=work \
 
 assertContains '  backend: __OMP_MEMORY_BACKEND__' "$temporaryDir/source/templates/omp/config.yml"
 assertContains '  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__' "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains 'fake-hindsight-secret' "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains 'fake-hindsight-secret' "$temporaryDir/work-sync.out"
+assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
+assertNotContains "$protectedValue" "$temporaryDir/work-sync.out"
 printf '%s\n' 'OMP renderer and sync tests passed.'
