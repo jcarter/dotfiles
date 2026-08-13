@@ -67,6 +67,7 @@ Architecture differences should be detected from Homebrew at runtime. Host-purpo
 Run the smallest relevant checks from the repository root:
 
 - For installer, trust, Brewfile, or bootstrap changes: `tests/test-bootstrap.sh`.
+- For dotfile mappings or link modes: `tests/test-dotfiles.sh`.
 - For OMP renderer, sync, template, or role changes: `tests/test-omp-settings.sh`.
 - For Bash changes: `bash -n install.sh lib/utils.sh .mise/tasks/*`.
 - For Fish changes: `fish -n home/.config/fish/config.fish home/.config/fish/conf.d/*.fish home/.config/fish/functions/*.fish`.

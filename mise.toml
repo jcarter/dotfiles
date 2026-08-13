@@ -1,6 +1,5 @@
 [settings]
 dotfiles.default_mode = "symlink"
-dotfiles.root = "home"
 
 [bootstrap.macos.dock]
 autohide = true
@@ -15,14 +14,14 @@ NSGlobalDomain = { AppleInterfaceStyle = "Dark" }
 "com.apple.dock" = { "autohide-delay" = 0.0, "autohide-time-modifier" = 0.2 }
 
 [dotfiles]
-"~/.hushlogin" = {}
-"~/.config/fish" = { mode = "symlink-each" }
-"~/.config/fnox" = { mode = "symlink-each" }
-"~/.config/git" = { mode = "symlink-each" }
-"~/.config/gh" = { mode = "symlink-each" }
-"~/.config/kitty" = { mode = "symlink-each" }
-"~/.config/mise/config.toml" = { mode = "symlink" }
-"~/.omp/agent/themes" = { mode = "symlink-each" }
+"~/.hushlogin" = { source = "home/.hushlogin" }
+"~/.config/fish" = { source = "home/.config/fish", mode = "symlink-each" }
+"~/.config/fnox" = { source = "home/.config/fnox", mode = "symlink-each" }
+"~/.config/git" = { source = "home/.config/git", mode = "symlink-each" }
+"~/.config/gh" = { source = "home/.config/gh", mode = "symlink-each" }
+"~/.config/kitty" = { source = "home/.config/kitty", mode = "symlink-each" }
+"~/.config/mise/config.toml" = { source = "home/.config/mise/config.toml", mode = "symlink" }
+"~/.omp/agent/themes" = { source = "home/.omp/agent/themes", mode = "symlink-each" }
 "~/.local/bin/omp-render-settings" = { source = ".mise/tasks/omp-render-settings", mode = "symlink" }
 "~/.local/bin/omp-sync-settings" = { source = ".mise/tasks/omp-sync-settings", mode = "symlink" }
 
