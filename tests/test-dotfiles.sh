@@ -25,8 +25,10 @@ mise -C "$repoRoot" bootstrap dotfiles apply --yes >/dev/null
 managedTargets=(
     "$testHome/.hushlogin"
     "$testHome/.config/fish/config.fish"
+    "$testHome/.config/fish/conf.d/colored_man.fish"
     "$testHome/.config/fish/conf.d/fisher_config.fish"
     "$testHome/.config/fish/fish_plugins"
+    "$testHome/.config/fish/functions/render_prompt.fish"
     "$testHome/.config/fnox/config.toml"
     "$testHome/.config/git/config"
     "$testHome/.config/gh/config.yml"
