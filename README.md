@@ -1,6 +1,6 @@
 # Dotfiles
 
-Run one command on a fresh Mac:
+Command on a fresh Mac:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/jcarter/dotfiles/main/install.sh | bash -s -- personal
@@ -16,51 +16,6 @@ curl -fsSL https://raw.githubusercontent.com/jcarter/dotfiles/main/install.sh |
 ```
 
 Personal setup pauses for 1Password. Sign in, then enable **Settings > Developer > Integrate with 1Password CLI**.
-
-## Move from chezmoi
-
-1. Review live changes that chezmoi has not captured:
-
-   ```sh
-   chezmoi diff
-   ```
-
-2. Clone the mise version:
-
-   ```sh
-   mkdir -p ~/Source
-   git clone git@github.com:jcarter/dotfiles.git ~/Source/dotfiles
-   cd ~/Source/dotfiles
-   ```
-
-3. Move machine-specific environment variables out of Fish:
-
-   ```sh
-   $EDITOR mise.local.toml
-   ```
-
-   ```toml
-   [env]
-   DOTFILES_ROLE = "personal" # or "work"
-   # Add other non-secret variables here.
-   ```
-
-4. Preview the replacement of chezmoi-managed files:
-
-   ```sh
-   mise trust -y ./mise.toml
-   mise bootstrap dotfiles apply --dry-run --force --yes
-   ```
-
-5. Apply the migration:
-
-   ```sh
-   ./install.sh personal --force-dotfiles
-   # Work Mac:
-   ./install.sh work --force-dotfiles
-   ```
-
-Keep the old chezmoi source until the new setup works. Do not run `chezmoi apply` after migration.
 
 ## Use
 
