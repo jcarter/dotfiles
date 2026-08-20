@@ -1,6 +1,14 @@
+[core]
+  pager = delta
 [include]
 	path = ~/.config/git/config.local
 [init]
 	defaultBranch = main
+[fetch]
+  prune = true
 [pull]
 	rebase = true
+[push]
+	autoSetupRemote = true
+[rerere]
+  enabled = true
