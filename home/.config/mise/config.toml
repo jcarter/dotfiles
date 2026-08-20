@@ -2,6 +2,9 @@
 # ~/.config/mise/config.toml; repository tasks and local settings stay in the
 # repository's mise files.
 
+[settings]
+minimum_release_age = "7d"
+
 [tool_alias]
 delta = "cargo:git-delta"
 fd = "cargo:fd-find"
