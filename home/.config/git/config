@@ -1,14 +1,100 @@
-[core]
-  pager = delta
+# See https://git-scm.com/docs/git-config
+
 [include]
 	path = ~/.config/git/config.local
+
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	st = status
+[branch]
+	sort = -committerdate    # Sort branches by most recent commit first
+[blame]
+	coloring = none          # Delta owns the adaptive blame palette
+[color]
+	ui = auto
+[column]
+	ui = auto 			         # Output in columns when possible
+[commit]
+	verbose = true           # Include diff comment in commit message template
+[core]
+	pager = delta-everforest
+[delta]
+	features = hyperlinks merge-conflicts section-styles line-numbers consistent-diff-colors everforest-common
+[delta "hyperlinks"]
+	hyperlinks = true
+[delta "merge-conflicts"]
+	merge-conflict-begin-symbol = <
+	merge-conflict-end-symbol = >
+	merge-conflict-ours-diff-header-style = yellow ul
+	merge-conflict-ours-diff-header-decoration-style = omit
+	merge-conflict-theirs-diff-header-style = yellow ul
+	merge-conflict-theirs-diff-header-decoration-style = omit
+[delta "section-styles"]
+	file-modified-label = modified:
+	file-decoration-style = omit
+	hunk-label = Δ
+	hunk-header-file-style = magenta
+	hunk-header-line-number-style = magenta
+	hunk-header-style = line-number brightblack
+	hunk-header-decoration-style = omit
+[delta "line-numbers"]
+	line-numbers = true
+	line-numbers-left-style = brightblack
+	line-numbers-right-style = brightblack
+	line-numbers-minus-style = red
+	line-numbers-plus-style = green
+	line-numbers-zero-style = brightblack
+[delta "consistent-diff-colors"]
+	minus-style = minus-non-emph-style
+	plus-style = plus-non-emph-style
+[delta "everforest-common"]
+	# ANSI syntax colors inherit the active Everforest Kitty palette.
+	blame-code-style = syntax
+	syntax-theme = ansi
+	true-color = always
+[delta "everforest-dark"]
+	blame-palette = "#343f44" "#3d484d" "#475258"
+	dark = true
+	minus-emph-style = syntax bold "#514045"
+	minus-empty-line-marker-style = normal "#514045"
+	minus-non-emph-style = syntax "#514045"
+	plus-emph-style = syntax bold "#425047"
+	plus-empty-line-marker-style = normal "#425047"
+	plus-non-emph-style = syntax "#425047"
+	map-styles = "bold purple => syntax #3a515d, bold cyan => syntax #3a515d, bold blue => syntax #4a444e, bold yellow => syntax #4a444e"
+[delta "everforest-light"]
+	blame-palette = "#f4f0d9" "#efebd4" "#e6e2cc"
+	light = true
+	minus-emph-style = syntax bold "#fde3da"
+	minus-empty-line-marker-style = normal "#fde3da"
+	minus-non-emph-style = syntax "#fde3da"
+	plus-emph-style = syntax bold "#f0f1d2"
+	plus-empty-line-marker-style = normal "#f0f1d2"
+	plus-non-emph-style = syntax "#f0f1d2"
+	map-styles = "bold purple => syntax #e9f0e9, bold cyan => syntax #e9f0e9, bold blue => syntax #fae8e2, bold yellow => syntax #fae8e2"
+[diff]
+	algorithm = histogram    # Clearer diffs on moved/edited lines
+	colorMoved = plain       # Highlight moved blocks in diffs
+	mnemonicPrefix = true    # More intuitive refs in diff output
 [init]
 	defaultBranch = main
 [fetch]
   prune = true
+[interactive]
+	diffFilter = delta-everforest --color-only
+[pretty]
+	compact = %C(yellow)%h %C(cyan)%ar %C(blue)%an%C(magenta)% D %C(reset)%s
+	compact-source = %C(yellow)%h %C(green)%S %C(cyan)%ar %C(blue)%an%C(magenta)% D %C(reset)%s
+	comfy = %C(yellow)%h %C(cyan)%ar %C(blue)%an%C(magenta)% D%n%C(reset)%s
+	comfy-source = %C(yellow)%h %C(green)%S %C(cyan)%ar %C(blue)%an%C(magenta)% D%n%C(reset)%s
 [pull]
-	rebase = true
+	rebase = true            # Rebase (instead of merge) on pull
 [push]
-	autoSetupRemote = true
+	autoSetupRemote = true   # Automatically set upstream branch on push
 [rerere]
-  enabled = true
+  enabled = true           # Record and reuse conflict resolutions
+	autoupdate = true        # Apply stored conflict resolutions automatically
+[tag]
+	sort = -version:refname  # Sort version numbers as you would expect

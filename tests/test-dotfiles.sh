@@ -35,6 +35,7 @@ managedTargets=(
     "$testHome/.config/kitty/kitty.conf"
     "$testHome/.config/mise/config.toml"
     "$testHome/.omp/agent/themes/everforest-dark.json"
+    "$testHome/.local/bin/delta-everforest"
     "$testHome/.local/bin/omp-render-settings"
     "$testHome/.local/bin/omp-sync-settings"
 )
