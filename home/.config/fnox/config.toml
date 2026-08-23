@@ -7,3 +7,7 @@ onepassword = { type = "1password" }
 
 [secrets]
 OMP_HINDSIGHT_API_URL = { provider = "onepassword", value = "op://Dev/Hindsight/API URL", env = false, if_missing = "error", description = "Personal OMP Hindsight API URL" }
+
+[profiles.work.secrets]
+CLIENT_ID = { provider = "onepassword", value = "op://Elevance/EHAP/CLIENT_ID", env = "exec", if_missing = "error", description = "EHAP OAuth client ID" }
+CLIENT_SECRET = { provider = "onepassword", value = "op://Elevance/EHAP/CLIENT_SECRET", env = "exec", if_missing = "error", description = "EHAP OAuth client secret" }

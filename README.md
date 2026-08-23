@@ -35,8 +35,10 @@ Edit an existing linked file under `~/.config`; the repository changes at once. 
 
 The installer creates two untracked files:
 
-- `mise.local.toml` holds `DOTFILES_ROLE` and non-secret environment variables for this computer.
+- `mise.local.toml` holds `DOTFILES_ROLE` for this repository's tasks.
 - `~/.config/git/config.local` holds Git name and email.
+
+Put non-secret environment variables needed in every shell in `~/.config/mise/config.local.toml`. It is loaded globally and remains untracked.
 
 Secrets stay in 1Password. Personal OMP uses Hindsight through fnox. Work OMP sets `memory.backend: off` without reading the Hindsight secret.
 
