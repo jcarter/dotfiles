@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Upgrade declared packages and mise tools, then converge"
+set -euo pipefail
+
+source "${MISE_PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/lib/utils.sh"
+
+"$DOTFILES_REPO_ROOT/.mise/tasks/brew-bundle" --upgrade
+cd "$DOTFILES_REPO_ROOT"
+mise upgrade
+mise bootstrap

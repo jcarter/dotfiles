@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#MISE description="Set Homebrew Fish as the login shell"
+set -euo pipefail
+
+source "${MISE_PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/lib/utils.sh"
+
+brew="$(dotfiles_brew || true)"
+if [[ -z "$brew" ]]; then
+    printf '%s\n' 'Homebrew is required. Run install.sh first.' >&2
+    exit 1
+fi
+
+fishPath="$("$brew" --prefix)/bin/fish"
+if [[ ! -x "$fishPath" ]]; then
+    printf 'Fish was not found at %s.\n' "$fishPath" >&2
+    exit 1
+fi
+
+if ! grep -Fqx "$fishPath" /etc/shells; then
+    printf '%s\n' "$fishPath" | sudo tee -a /etc/shells >/dev/null
+fi
+
+currentShell="$(dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}')"
+if [[ "$currentShell" != "$fishPath" ]]; then
+    chsh -s "$fishPath"
+fi

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+#MISE description="Generate Fish completions for installed tools"
+set -euo pipefail
+
+completionsDir="${XDG_CONFIG_HOME:-"$HOME/.config"}/fish/completions"
+mkdir -p "$completionsDir"
+
+generate() {
+    local name="$1"
+    shift
+    if ! command -v "$name" >/dev/null 2>&1; then
+        return
+    fi
+
+    local temporary
+    temporary="$(mktemp "$completionsDir/.${name}.XXXXXX")"
+    if "$@" > "$temporary"; then
+        mv "$temporary" "$completionsDir/$name.fish"
+    else
+        rm -f "$temporary"
+        return 1
+    fi
+}
+
+generate mise mise completion fish

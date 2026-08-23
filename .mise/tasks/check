@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#MISE description="Report Git, Homebrew, and mise state without changing it"
+set -uo pipefail
+
+source "${MISE_PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/lib/utils.sh"
+status=0
+
+reportFailure() {
+    status=1
+}
+
+cd "$DOTFILES_REPO_ROOT"
+printf 'Repository:\n'
+git status --short --branch || reportFailure
+
+if upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null)"; then
+    read -r behind ahead < <(git rev-list --left-right --count "${upstream}...HEAD")
+    printf 'Upstream: %s (behind %s, ahead %s; based on last fetch)\n' "$upstream" "$behind" "$ahead"
+else
+    printf '%s\n' 'Upstream: none configured' >&2
+    reportFailure
+fi
+
+printf '\nHomebrew bundle:\n'
+brew="$(dotfiles_brew || true)"
+if [[ -z "$brew" ]]; then
+    printf '%s\n' 'Homebrew: not installed' >&2
+    reportFailure
+else
+    "$brew" bundle check --file="$DOTFILES_REPO_ROOT/Brewfile" --no-upgrade || reportFailure
+fi
+
+printf '\nMise configuration:\n'
+if command -v mise >/dev/null 2>&1; then
+    mise config || reportFailure
+    printf '\nMise bootstrap dry run:\n'
+    mise bootstrap --dry-run --yes || reportFailure
+else
+    printf '%s\n' 'mise: not installed' >&2
+    reportFailure
+fi
+
+exit "$status"

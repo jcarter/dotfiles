@@ -1,0 +1,12 @@
+# Machine-specific overlays and identity files never belong in the source.
+home/.config/mise/config.local.toml
+home/.config/mise/config.*.local.toml
+home/.config/git/config.local
+
+# Keep accidental repository-local mise overlays out of commits as well.
+mise.local.toml
+mise.*.local.toml
+
+# fnox local state and overrides must stay machine-local.
+fnox.local.toml
+home/.config/fnox/fnox.local.toml

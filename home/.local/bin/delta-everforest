@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# Git starts pagers through /bin/sh, so select the Delta palette here instead
+# of relying on state from a particular interactive shell.
+if command -v defaults >/dev/null 2>&1 && defaults read -g AppleInterfaceStyle >/dev/null 2>&1; then
+    everforest_delta_feature=everforest-dark
+else
+    everforest_delta_feature=everforest-light
+fi
+
+# Preserve temporary Delta features, but replace any palette inherited from a
+# previous invocation so --light and --dark can never be active together.
+delta_features=${DELTA_FEATURES:-}
+delta_features_prefix=
+case "$delta_features" in
+    +*)
+        delta_features_prefix=+
+        delta_features=${delta_features#+}
+        ;;
+esac
+
+clean_delta_features=
+for delta_feature in $delta_features; do
+    case "$delta_feature" in
+        everforest-dark|everforest-light) ;;
+        *) clean_delta_features="${clean_delta_features}${clean_delta_features:+ }${delta_feature}" ;;
+    esac
+done
+
+if [ -z "${DELTA_FEATURES:-}" ]; then
+    delta_features_prefix=+
+fi
+DELTA_FEATURES="${delta_features_prefix}${clean_delta_features}${clean_delta_features:+ }${everforest_delta_feature}"
+export DELTA_FEATURES
+
+exec delta "$@"

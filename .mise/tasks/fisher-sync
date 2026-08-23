@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+#MISE description="Converge Fisher plugins and initialize Tide once"
+set -euo pipefail
+
+if ! command -v fish >/dev/null 2>&1; then
+    printf '%s\n' 'Fish is required. Run the Brewfile task first.' >&2
+    exit 1
+fi
+
+fish -c '
+    if not functions -q fisher
+        curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+        fisher install jorgebucaran/fisher
+    end
+
+    fisher update
+
+    if functions -q tide; and not set -q tide_left_prompt_items
+        tide configure --auto \
+            --style="Classic" \
+            --prompt_colors="16 colors" \
+            --show_time="No" \
+            --classic_prompt_separators="Slanted" \
+            --powerline_prompt_heads="Slanted" \
+            --powerline_prompt_tails="Slanted" \
+            --powerline_prompt_style="One line" \
+            --prompt_spacing="Compact" \
+            --icons="Few icons" \
+            --transient="Yes" >/dev/null
+    end
+'

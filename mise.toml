@@ -1,0 +1,36 @@
+[settings]
+dotfiles.default_mode = "symlink"
+
+[bootstrap.macos.dock]
+autohide = true
+tilesize = 30
+
+[bootstrap.macos.finder]
+show_pathbar = true
+preferred_view_style = "list"
+
+[bootstrap.macos.defaults]
+NSGlobalDomain = { AppleInterfaceStyle = "Dark" }
+"com.apple.dock" = { "autohide-delay" = 0.0, "autohide-time-modifier" = 0.2 }
+
+[dotfiles]
+"~/.hushlogin" = { source = "home/.hushlogin" }
+"~/.config/fish" = { source = "home/.config/fish", mode = "symlink-each" }
+"~/.config/fnox" = { source = "home/.config/fnox", mode = "symlink-each" }
+"~/.config/git" = { source = "home/.config/git", mode = "symlink-each" }
+"~/.config/gh" = { source = "home/.config/gh", mode = "symlink-each" }
+"~/.config/kitty" = { source = "home/.config/kitty", mode = "symlink-each" }
+"~/.config/mise/config.toml" = { source = "home/.config/mise/config.toml", mode = "symlink" }
+"~/.omp/agent/themes" = { source = "home/.omp/agent/themes", mode = "symlink-each" }
+"~/.local/bin/delta-everforest" = { source = "home/.local/bin/delta-everforest", mode = "symlink" }
+"~/.local/bin/omp-render-settings" = { source = ".mise/tasks/omp-render-settings", mode = "symlink" }
+"~/.local/bin/omp-sync-settings" = { source = ".mise/tasks/omp-sync-settings", mode = "symlink" }
+
+[tasks.bootstrap]
+description = "Run idempotent post-bootstrap setup"
+run = [
+  { task = "setup-login-shell" },
+  { task = "fisher-sync" },
+  { task = "generate-completions" },
+  { task = "omp-render-settings" },
+]

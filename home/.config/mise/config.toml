@@ -1,0 +1,32 @@
+# Tools available in every directory. install.sh links this file to
+# ~/.config/mise/config.toml; repository tasks and local settings stay in the
+# repository's mise files.
+
+[settings]
+minimum_release_age = "7d"
+
+[tool_alias]
+delta = "cargo:git-delta"
+fd = "cargo:fd-find"
+oh-my-pi = "github:can1357/oh-my-pi"
+ouch = "github:ouch-org/ouch"
+pi-coding-agent = "npm:@earendil-works/pi-coding-agent"
+
+[tools]
+bat = "latest"
+delta = "latest"
+elixir = "latest"
+erlang = "latest"
+eza = "latest"
+fd = "latest"
+fnox = "latest"
+fzf = "latest"
+gh = "latest"
+go = "latest"
+herdr = "latest"
+node = "latest"
+oh-my-pi = "latest"
+ouch = "latest"
+pi-coding-agent = "latest"
+rust = "latest"
+worktrunk = "latest"

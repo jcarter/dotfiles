@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#MISE description="Install missing Brewfile packages without upgrades"
+set -euo pipefail
+
+source "${MISE_PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/lib/utils.sh"
+
+mode="${1:-install}"
+if [[ "$mode" != install && "$mode" != --upgrade ]]; then
+    printf 'Usage: %s [--upgrade]\n' "${0##*/}" >&2
+    exit 2
+fi
+
+brew="$(dotfiles_brew || true)"
+if [[ -z "$brew" ]]; then
+    printf '%s\n' 'Homebrew is required. Run install.sh first.' >&2
+    exit 1
+fi
+
+if [[ "$mode" == --upgrade ]]; then
+    "$brew" bundle upgrade --file="$DOTFILES_REPO_ROOT/Brewfile"
+else
+    "$brew" bundle install --file="$DOTFILES_REPO_ROOT/Brewfile" --no-upgrade
+fi
