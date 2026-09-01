@@ -21,6 +21,7 @@ NSGlobalDomain = { AppleInterfaceStyle = "Dark" }
 "~/.config/gh" = { source = "home/.config/gh", mode = "symlink-each" }
 "~/.config/kitty" = { source = "home/.config/kitty", mode = "symlink-each" }
 "~/.config/mise/config.toml" = { source = "home/.config/mise/config.toml", mode = "symlink" }
+"~/.config/yazi" = { source = "home/.config/yazi", mode = "symlink-each" }
 "~/.omp/agent/themes" = { source = "home/.omp/agent/themes", mode = "symlink-each" }
 "~/.local/bin/delta-everforest" = { source = "home/.local/bin/delta-everforest", mode = "symlink" }
 "~/.local/bin/omp-render-settings" = { source = ".mise/tasks/omp-render-settings", mode = "symlink" }

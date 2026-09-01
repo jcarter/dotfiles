@@ -31,6 +31,8 @@ Run commands from `~/Source/dotfiles`:
 
 Edit an existing linked file under `~/.config`; the repository changes at once. Run `git status`, commit, and push. Add new managed files under `home/` and map them in `mise.toml`.
 
+Fish, Kitty, and Yazi load their active Everforest configuration from this repository. The standalone `everforest-*` repositories are publication targets; VS Code remains an installed extension.
+
 ## Per-computer settings
 
 The installer creates two untracked files:

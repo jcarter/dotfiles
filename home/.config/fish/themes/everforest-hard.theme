@@ -1,0 +1,125 @@
+# name: 'Everforest Hard'
+# url: 'https://github.com/jcarter/everforest-fish'
+
+[dark]
+# preferred_background: 272e33
+fish_color_normal d3c6aa
+fish_color_command a7c080
+fish_color_param 7fbbb3
+fish_color_keyword d699b6
+fish_color_quote dbbc7f
+fish_color_redirection 83c092
+fish_color_end e69875
+fish_color_comment 859289
+fish_color_error e67e80
+fish_color_gray 859289
+fish_color_selection --background=4c3743
+fish_color_search_match --background=4c3743
+fish_color_option a7c080
+fish_color_operator 83c092
+fish_color_escape e69875
+fish_color_autosuggestion 7a8478
+fish_color_cancel e67e80 --reverse
+fish_color_valid_path --underline
+fish_color_history_current --bold
+fish_color_cwd dbbc7f
+fish_color_cwd_root e67e80
+fish_color_user 83c092
+fish_color_host 7fbbb3
+fish_color_host_remote a7c080
+fish_color_status e67e80
+fish_pager_color_progress 859289
+fish_pager_color_background
+fish_pager_color_prefix d699b6
+fish_pager_color_completion d3c6aa
+fish_pager_color_description 859289
+fish_pager_color_selected_background --background=4c3743
+fish_pager_color_selected_prefix d699b6
+fish_pager_color_selected_completion d3c6aa
+fish_pager_color_selected_description 859289
+fish_pager_color_secondary_background
+fish_pager_color_secondary_prefix d699b6
+fish_pager_color_secondary_completion d3c6aa
+fish_pager_color_secondary_description 859289
+
+[light]
+# preferred_background: fffbef
+fish_color_normal 5c6a72
+fish_color_command 8da101
+fish_color_param 3a94c5
+fish_color_keyword df69ba
+fish_color_quote dfa000
+fish_color_redirection 35a77c
+fish_color_end f57d26
+fish_color_comment 939f91
+fish_color_error f85552
+fish_color_gray 939f91
+fish_color_selection --background=f0f2d4
+fish_color_search_match --background=f0f2d4
+fish_color_option 8da101
+fish_color_operator 35a77c
+fish_color_escape f57d26
+fish_color_autosuggestion a6b0a0
+fish_color_cancel f85552 --reverse
+fish_color_valid_path --underline
+fish_color_history_current --bold
+fish_color_cwd dfa000
+fish_color_cwd_root f85552
+fish_color_user 35a77c
+fish_color_host 3a94c5
+fish_color_host_remote 8da101
+fish_color_status f85552
+fish_pager_color_progress 939f91
+fish_pager_color_background
+fish_pager_color_prefix df69ba
+fish_pager_color_completion 5c6a72
+fish_pager_color_description 939f91
+fish_pager_color_selected_background --background=f0f2d4
+fish_pager_color_selected_prefix df69ba
+fish_pager_color_selected_completion 5c6a72
+fish_pager_color_selected_description 939f91
+fish_pager_color_secondary_background
+fish_pager_color_secondary_prefix df69ba
+fish_pager_color_secondary_completion 5c6a72
+fish_pager_color_secondary_description 939f91
+
+[unknown]
+# preferred_background: 272e33
+fish_color_normal d3c6aa
+fish_color_command a7c080
+fish_color_param 7fbbb3
+fish_color_keyword d699b6
+fish_color_quote dbbc7f
+fish_color_redirection 83c092
+fish_color_end e69875
+fish_color_comment 859289
+fish_color_error e67e80
+fish_color_gray 859289
+fish_color_selection --background=4c3743
+fish_color_search_match --background=4c3743
+fish_color_option a7c080
+fish_color_operator 83c092
+fish_color_escape e69875
+fish_color_autosuggestion 7a8478
+fish_color_cancel e67e80 --reverse
+fish_color_valid_path --underline
+fish_color_history_current --bold
+fish_color_cwd dbbc7f
+fish_color_cwd_root e67e80
+fish_color_user 83c092
+fish_color_host 7fbbb3
+fish_color_host_remote a7c080
+fish_color_status e67e80
+fish_pager_color_progress 859289
+fish_pager_color_background
+fish_pager_color_prefix d699b6
+fish_pager_color_completion d3c6aa
+fish_pager_color_description 859289
+fish_pager_color_selected_background --background=4c3743
+fish_pager_color_selected_prefix d699b6
+fish_pager_color_selected_completion d3c6aa
+fish_pager_color_selected_description 859289
+fish_pager_color_secondary_background
+fish_pager_color_secondary_prefix d699b6
+fish_pager_color_secondary_completion d3c6aa
+fish_pager_color_secondary_description 859289
