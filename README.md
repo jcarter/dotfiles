@@ -23,11 +23,14 @@ Run commands from `~/Source/dotfiles`:
 
 | Command | Result |
 |---|---|
+| `./install.sh personal` or `./install.sh work` | Set up this Mac from a checkout |
+| `mise run sync` | Pull the checkout and apply its configuration |
+| `mise run update` | Upgrade packages and tools, then apply the configuration |
 | `mise run check` | Report Git, Homebrew, and mise state |
-| `mise run sync` | Pull and apply changes |
-| `mise run update` | Upgrade packages and tools, then apply |
 | `mise run omp-render-settings` | Rebuild the live OMP config |
 | `mise run omp-sync-settings` | Save non-secret OMP changes |
+
+Bootstrap runs during setup, sync, and update. It refreshes Fisher plugins as part of each convergence.
 
 Edit an existing linked file under `~/.config`; the repository changes at once. Run `git status`, commit, and push. Add new managed files under `home/` and map them in `mise.toml`.
 

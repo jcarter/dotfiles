@@ -33,8 +33,8 @@ globs:
 |---|---|
 | `./install.sh personal` | Install or converge a personal Mac from a checkout. |
 | `./install.sh work` | Install or converge a work Mac from a checkout. |
-| `mise run sync` | Require a clean checkout, fast-forward from Git, and converge the Mac without an explicit upgrade pass. |
-| `mise run update` | Upgrade declared Homebrew packages and mise tools, then converge. |
+| `mise run sync` | Require a clean checkout, fast-forward from Git, and converge the Mac without an explicit upgrade pass; bootstrap refreshes Fisher plugins. |
+| `mise run update` | Upgrade declared Homebrew packages and mise tools, then converge; bootstrap refreshes Fisher plugins. |
 | `mise run check` | Report Git, Homebrew, and mise state without applying changes or reading secrets. |
 | `mise run omp-render-settings` | Generate the role-specific live OMP configuration. |
 | `mise run omp-sync-settings` | Copy OMP's non-secret changes back to the tracked template and restore sentinels. |
@@ -69,8 +69,9 @@ Run the smallest relevant checks from the repository root:
 - For installer, trust, Brewfile, or bootstrap changes: `tests/test-bootstrap.sh`.
 - For dotfile mappings or link modes: `tests/test-dotfiles.sh`.
 - For OMP renderer, sync, template, or role changes: `tests/test-omp-settings.sh`.
-- For Bash changes: `bash -n install.sh lib/utils.sh .mise/tasks/*`.
+- For Bash changes: `bash -n install.sh lib/*.sh .mise/tasks/* tests/*.sh`.
 - For Fish changes: `fish -n home/.config/fish/config.fish home/.config/fish/conf.d/*.fish home/.config/fish/functions/*.fish`.
+- For Fish theme changes: `tests/test-fish-theme.sh`.
 - For every change: `git diff --check`, `env MISE_TRUSTED_CONFIG_PATHS="$PWD" mise fmt --check`, and `env MISE_TRUSTED_CONFIG_PATHS="$PWD" mise tasks validate`.
 
 Use `MISE_TRUSTED_CONFIG_PATHS` only for validation so parsing the repository does not change machine trust. Run `mise run check` when current machine state is relevant; it is read-only but depends on the installed Homebrew and mise state.

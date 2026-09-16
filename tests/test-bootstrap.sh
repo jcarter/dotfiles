@@ -40,14 +40,30 @@ chmod 700 "$temporaryDir/bin/brew" "$temporaryDir/bin/mise"
 export BOOTSTRAP_TEST_LOG="$temporaryDir/actions.log"
 testPath="$temporaryDir/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
+runInstaller() {
+    env \
+        -u XDG_CONFIG_HOME \
+        -u DOTFILES_ROLE \
+        -u DOTFILES_DIR \
+        -u DOTFILES_REPO \
+        HOME="$1" \
+        PATH="$testPath" \
+        MISE_PROJECT_ROOT="$repoRoot" \
+        DOTFILES_SKIP_1PASSWORD_PROMPT=1 \
+        GIT_USER_NAME='Test User' \
+        GIT_USER_EMAIL='test@example.com' \
+        "$repoRoot/install.sh" "${@:2}"
+}
+
 grep -Fq 'Checkout location (default: ~/Source/dotfiles).' <("$repoRoot/install.sh" --help) || fail 'help does not show the Source checkout default'
 
-HOME="$temporaryDir/home" \
-PATH="$testPath" \
-DOTFILES_SKIP_1PASSWORD_PROMPT=1 \
-GIT_USER_NAME='Test User' \
-GIT_USER_EMAIL='test@example.com' \
-"$repoRoot/install.sh" personal >/dev/null
+if updateOutput="$(runInstaller "$temporaryDir/home" --update 2>&1)"; then
+    fail 'retired --update option was accepted'
+fi
+grep -Fq 'run `mise run sync`' <<<"$updateOutput" || fail 'retired --update option lacked sync guidance'
+[[ ! -s "$BOOTSTRAP_TEST_LOG" ]] || fail 'retired --update option ran external setup actions'
+
+runInstaller "$temporaryDir/home" personal >/dev/null
 
 localConfig="$repoRoot/mise.local.toml"
 gitConfig="$temporaryDir/home/.config/git/config.local"
@@ -63,8 +79,8 @@ grep -Fqx "mise trust -y $repoRoot/mise.toml" "$BOOTSTRAP_TEST_LOG" || fail 'rep
 grep -Fqx 'mise bootstrap --yes' "$BOOTSTRAP_TEST_LOG" || fail 'mise bootstrap was not requested'
 
 # The same role is idempotent. A conflicting role must never rewrite the file.
-HOME="$temporaryDir/home" PATH="$testPath" DOTFILES_SKIP_1PASSWORD_PROMPT=1 "$repoRoot/install.sh" personal >/dev/null
-if HOME="$temporaryDir/home" PATH="$testPath" DOTFILES_SKIP_1PASSWORD_PROMPT=1 "$repoRoot/install.sh" work >/dev/null 2>&1; then
+runInstaller "$temporaryDir/home" personal >/dev/null
+if runInstaller "$temporaryDir/home" work >/dev/null 2>&1; then
     fail 'conflicting role was accepted'
 fi
 grep -Fqx 'DOTFILES_ROLE = "personal"' "$localConfig" || fail 'conflicting role changed the local config'
@@ -72,10 +88,10 @@ grep -Fqx 'DOTFILES_ROLE = "personal"' "$localConfig" || fail 'conflicting role 
 # Replacing an unrelated global config requires the explicit migration flag.
 unlink "$temporaryDir/home/.config/mise/config.toml"
 printf '%s\n' '[tools]' > "$temporaryDir/home/.config/mise/config.toml"
-if HOME="$temporaryDir/home" PATH="$testPath" DOTFILES_SKIP_1PASSWORD_PROMPT=1 "$repoRoot/install.sh" personal >/dev/null 2>&1; then
+if runInstaller "$temporaryDir/home" personal >/dev/null 2>&1; then
     fail 'existing global config was replaced without force'
 fi
-HOME="$temporaryDir/home" PATH="$testPath" DOTFILES_SKIP_1PASSWORD_PROMPT=1 "$repoRoot/install.sh" personal --force-dotfiles >/dev/null
+runInstaller "$temporaryDir/home" personal --force-dotfiles >/dev/null
 [[ "$(readlink "$temporaryDir/home/.config/mise/config.toml")" == "$repoRoot/home/.config/mise/config.toml" ]] || fail 'forced global config replacement failed'
 grep -Fqx 'mise bootstrap --yes --force-dotfiles' "$BOOTSTRAP_TEST_LOG" || fail 'force flag was not forwarded'
 
@@ -109,13 +125,19 @@ EOF
 chmod 700 "$temporaryDir/clone-bin/git" "$temporaryDir/streamed/install.sh"
 cloneHome="$temporaryDir/clone-home"
 clonePath="$temporaryDir/clone-bin:/usr/bin:/bin:/usr/sbin:/sbin"
-HOME="$cloneHome" \
-PATH="$clonePath" \
-BOOTSTRAP_TEST_REPO="$repoRoot" \
-DOTFILES_SKIP_1PASSWORD_PROMPT=1 \
-GIT_USER_NAME='Test User' \
-GIT_USER_EMAIL='test@example.com' \
-"$temporaryDir/streamed/install.sh" personal >/dev/null
+env \
+    -u XDG_CONFIG_HOME \
+    -u MISE_PROJECT_ROOT \
+    -u DOTFILES_ROLE \
+    -u DOTFILES_DIR \
+    -u DOTFILES_REPO \
+    HOME="$cloneHome" \
+    PATH="$clonePath" \
+    BOOTSTRAP_TEST_REPO="$repoRoot" \
+    DOTFILES_SKIP_1PASSWORD_PROMPT=1 \
+    GIT_USER_NAME='Test User' \
+    GIT_USER_EMAIL='test@example.com' \
+    "$temporaryDir/streamed/install.sh" personal >/dev/null
 
 defaultCheckout="$cloneHome/Source/dotfiles"
 [[ -d "$defaultCheckout/.git" ]] || fail 'default Source checkout was not cloned'

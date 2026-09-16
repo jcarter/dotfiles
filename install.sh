@@ -10,18 +10,15 @@ readonly defaultDotfilesDir="$HOME/Source/dotfiles"
 
 role="${DOTFILES_ROLE:-}"
 forceDotfiles=false
-updateOnly=false
 createdRoleConfig=false
 repoRoot=''
 
 usage() {
     cat <<'EOF'
 Usage: install.sh <personal|work> [--force-dotfiles]
-       install.sh --update
 
 Options:
   --force-dotfiles  Replace existing regular files during a one-time migration.
-  --update          Fast-forward an existing checkout and converge it.
   -h, --help        Show this help.
 
 Environment:
@@ -47,7 +44,8 @@ parseArgs() {
                 forceDotfiles=true
                 ;;
             --update)
-                updateOnly=true
+                printf '%s\n' 'The --update option is retired; run `mise run sync` from the checkout.' >&2
+                exit 2
                 ;;
             -h|--help)
                 usage
@@ -112,15 +110,6 @@ resolveRepo() {
         git clone --depth 1 "$repoUrl" "$targetDir"
     fi
     repoRoot="$targetDir"
-}
-
-updateRepo() {
-    [[ "$updateOnly" == true ]] || return 0
-    if [[ -n "$(git -C "$repoRoot" status --porcelain --untracked-files=normal)" ]]; then
-        printf '%s\n' 'Refusing to update a dirty dotfiles checkout.' >&2
-        exit 1
-    fi
-    git -C "$repoRoot" pull --ff-only
 }
 
 readConfiguredRole() {
@@ -264,7 +253,6 @@ main() {
     fi
     installHomebrew
     resolveRepo
-    updateRepo
     ensureRoleConfig
     ensureGitIdentity
     linkGlobalMiseConfig

@@ -6,6 +6,11 @@ repoRoot="$(cd "$(dirname "$0")/.." && pwd)"
 temporaryDir="$(mktemp -d)"
 trap 'rm -rf "$temporaryDir"' EXIT
 
+# Keep inherited machine settings from redirecting fixture operations outside
+# this temporary environment.
+unset HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME OMP_TEMPLATE_PATH \
+  OMP_CONFIG_PATH FNOX_CONFIG_PATH FNOX_BIN DOTFILES_REPO_ROOT DOTFILES_ROLE
+
 fail() {
   printf 'FAIL: %s\n' "$1" >&2
   exit 1
@@ -26,6 +31,10 @@ assertNotContains() {
 }
 
 mkdir -p "$temporaryDir/source/templates/omp" "$temporaryDir/live/agent" "$temporaryDir/bin"
+export HOME="$temporaryDir/home"
+export XDG_CONFIG_HOME="$temporaryDir/home/.config"
+export XDG_DATA_HOME="$temporaryDir/home/.local/share"
+export XDG_STATE_HOME="$temporaryDir/home/.local/state"
 cp "$repoRoot/templates/omp/config.yml" "$temporaryDir/source/templates/omp/config.yml"
 protectedValue='https://hindsight.example/api?scope=prod*&set=[one]'
 
@@ -36,12 +45,14 @@ set -euo pipefail
 printf '%s' 'https://hindsight.example/api?scope=prod*&set=[one]'
 EOF
 chmod 700 "$temporaryDir/bin/fnox"
+cp "$temporaryDir/bin/fnox" "$temporaryDir/bin/fnox with spaces"
+chmod 700 "$temporaryDir/bin/fnox with spaces"
 
 DOTFILES_ROLE=personal \
   DOTFILES_REPO_ROOT="$temporaryDir/source" \
   OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
   FNOX_CONFIG_PATH="$temporaryDir/fnox.toml" \
-  FNOX_BIN="$temporaryDir/bin/fnox" \
+  FNOX_BIN="$temporaryDir/bin/fnox with spaces" \
   "$repoRoot/.mise/tasks/omp-render-settings" > "$temporaryDir/personal.out"
 
 assertContains '  backend: hindsight' "$temporaryDir/live/agent/config.yml"
@@ -56,7 +67,7 @@ DOTFILES_ROLE=personal \
   DOTFILES_REPO_ROOT="$temporaryDir/source" \
   OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
   FNOX_CONFIG_PATH="$temporaryDir/fnox.toml" \
-  FNOX_BIN="$temporaryDir/bin/fnox" \
+  FNOX_BIN="$temporaryDir/bin/fnox with spaces" \
   "$repoRoot/.mise/tasks/omp-sync-settings" > "$temporaryDir/sync.out"
 
 assertContains '  backend: __OMP_MEMORY_BACKEND__' "$temporaryDir/source/templates/omp/config.yml"
@@ -96,4 +107,48 @@ assertContains '  backend: __OMP_MEMORY_BACKEND__' "$temporaryDir/source/templat
 assertContains '  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__' "$temporaryDir/source/templates/omp/config.yml"
 assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
 assertNotContains "$protectedValue" "$temporaryDir/work-sync.out"
+
+expectFailure() {
+  if "$@" >/dev/null 2>&1; then
+    fail "expected command to fail: $1"
+  fi
+}
+
+# Invalid roles, incomplete templates, fnox failures/empty values, and role
+# mismatches must leave their existing destination untouched.
+cp "$temporaryDir/live/agent/config.yml" "$temporaryDir/before-failure-live.yml"
+expectFailure env DOTFILES_ROLE=other OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
+  FNOX_BIN="$temporaryDir/bin/not-called" "$repoRoot/.mise/tasks/omp-render-settings"
+cmp -s "$temporaryDir/before-failure-live.yml" "$temporaryDir/live/agent/config.yml" || fail 'invalid role changed live config'
+
+cp "$temporaryDir/source/templates/omp/config.yml" "$temporaryDir/source/missing-sentinel.yml"
+sed -i '' 's/__OMP_MEMORY_BACKEND__/removed/' "$temporaryDir/source/missing-sentinel.yml"
+cp "$temporaryDir/live/agent/config.yml" "$temporaryDir/before-missing-sentinel-live.yml"
+expectFailure env DOTFILES_ROLE=work OMP_TEMPLATE_PATH="$temporaryDir/source/missing-sentinel.yml" \
+  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" FNOX_BIN="$temporaryDir/bin/not-called" \
+  "$repoRoot/.mise/tasks/omp-render-settings"
+cmp -s "$temporaryDir/before-missing-sentinel-live.yml" "$temporaryDir/live/agent/config.yml" || fail 'missing sentinel changed live config'
+
+cat > "$temporaryDir/bin/fnox-failed" <<'EOF'
+#!/usr/bin/env bash
+exit 7
+EOF
+cat > "$temporaryDir/bin/fnox-empty" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod 700 "$temporaryDir/bin/fnox-failed" "$temporaryDir/bin/fnox-empty"
+for fnoxFailure in fnox-failed fnox-empty; do
+  cp "$temporaryDir/live/agent/config.yml" "$temporaryDir/before-$fnoxFailure-live.yml"
+  expectFailure env DOTFILES_ROLE=personal OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
+    FNOX_BIN="$temporaryDir/bin/$fnoxFailure" "$repoRoot/.mise/tasks/omp-render-settings"
+  cmp -s "$temporaryDir/before-$fnoxFailure-live.yml" "$temporaryDir/live/agent/config.yml" || fail "$fnoxFailure changed live config"
+done
+
+sed -i '' 's/backend: off/backend: hindsight/' "$temporaryDir/live/agent/config.yml"
+cp "$temporaryDir/source/templates/omp/config.yml" "$temporaryDir/before-role-mismatch-source.yml"
+expectFailure env DOTFILES_ROLE=work DOTFILES_REPO_ROOT="$temporaryDir/source" \
+  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" FNOX_BIN="$temporaryDir/bin/not-called" \
+  "$repoRoot/.mise/tasks/omp-sync-settings"
+cmp -s "$temporaryDir/before-role-mismatch-source.yml" "$temporaryDir/source/templates/omp/config.yml" || fail 'role mismatch changed source template'
 printf '%s\n' 'OMP renderer and sync tests passed.'
