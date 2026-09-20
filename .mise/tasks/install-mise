@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#MISE description="Install or update mise from its official release binary"
+set -euo pipefail
+
+mode="${1:-install}"
+if [[ "$mode" != install && "$mode" != --update ]]; then
+    printf 'Usage: %s [--update]\n' "${0##*/}" >&2
+    exit 2
+fi
+
+miseBin="$HOME/.local/bin/mise"
+if [[ ! -x "$miseBin" ]]; then
+    printf '%s\n' 'Installing mise from its official release...'
+    temporary="$(mktemp)"
+    trap 'rm -f "$temporary"' EXIT
+    curl -fsSL https://mise.run -o "$temporary"
+    MISE_INSTALL_PATH="$miseBin" /bin/sh "$temporary"
+elif [[ "$mode" == --update ]]; then
+    "$miseBin" self-update --yes --no-plugins
+fi
+
+if [[ ! -x "$miseBin" ]]; then
+    printf 'mise was not installed at %s.\n' "$miseBin" >&2
+    exit 1
+fi
+
+"$miseBin" --version >/dev/null

@@ -2,13 +2,13 @@
 #MISE description="Set mise managed Fish as the login shell"
 set -euo pipefail
 
-miseBin="$(command -v mise || true)"
-if [[ -z "$miseBin" ]]; then
+if [[ ! -x "$HOME/.local/bin/mise" ]]; then
     printf '%s\n' 'mise is required. Run install.sh first.' >&2
     exit 1
 fi
+export PATH="$HOME/.local/bin:$PATH"
 
-fishPath="$("$miseBin" which fish 2>/dev/null || true)"
+fishPath="$(mise which fish 2>/dev/null || true)"
 if [[ ! -x "$fishPath" ]]; then
     printf '%s\n' 'Mise managed Fish was not found. Run `mise install fish` first.' >&2
     exit 1

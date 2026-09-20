@@ -30,6 +30,7 @@ NSGlobalDomain = { AppleInterfaceStyle = "Dark" }
 [tasks.bootstrap]
 description = "Run idempotent post-bootstrap setup"
 run = [
+  { task = "install-mise" },
   { task = "setup-login-shell" },
   { task = "fisher-sync" },
   { task = "generate-completions" },

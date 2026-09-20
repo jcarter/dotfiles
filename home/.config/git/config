@@ -18,6 +18,8 @@
 	ui = auto 			         # Output in columns when possible
 [commit]
 	verbose = true           # Include diff comment in commit message template
+[credential]
+	helper = osxkeychain     # Use MacOS Keychain integration for private HTTPS repos (in case I don't use SSH)
 [core]
 	pager = delta-everforest
 [delta]

@@ -22,4 +22,5 @@ generate() {
     fi
 }
 
+export PATH="$HOME/.local/bin:$PATH"
 generate mise mise completion fish

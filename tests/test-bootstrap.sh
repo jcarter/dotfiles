@@ -18,6 +18,7 @@ cp "$sourceRepoRoot/mise.toml" "$repoRoot/mise.toml"
 cp "$sourceRepoRoot/Brewfile" "$repoRoot/Brewfile"
 cp "$sourceRepoRoot/home/.config/mise/config.toml" "$repoRoot/home/.config/mise/config.toml"
 cp "$sourceRepoRoot/.mise/tasks/brew-bundle" "$repoRoot/.mise/tasks/brew-bundle"
+cp "$sourceRepoRoot/.mise/tasks/install-mise" "$repoRoot/.mise/tasks/install-mise"
 cp "$sourceRepoRoot/lib/utils.sh" "$repoRoot/lib/utils.sh"
 
 cat > "$temporaryDir/bin/brew" <<'EOF'
@@ -36,8 +37,44 @@ set -euo pipefail
 printf 'mise %s\n' "$*" >> "$BOOTSTRAP_TEST_LOG"
 EOF
 
-chmod 700 "$temporaryDir/bin/brew" "$temporaryDir/bin/mise"
+cat > "$temporaryDir/bin/mise-installer" <<'EOF'
+#!/bin/sh
+set -eu
+mkdir -p "$(dirname "$MISE_INSTALL_PATH")"
+cp "$BOOTSTRAP_TEST_MISE" "$MISE_INSTALL_PATH"
+chmod 700 "$MISE_INSTALL_PATH"
+EOF
+
+cat > "$temporaryDir/bin/curl" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+output=''
+url=''
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -o)
+            output="$2"
+            shift 2
+            ;;
+        -*)
+            shift
+            ;;
+        *)
+            url="$1"
+            shift
+            ;;
+    esac
+done
+[[ "$url" == https://mise.run ]]
+[[ -n "$output" ]]
+cp "$BOOTSTRAP_TEST_MISE_INSTALLER" "$output"
+printf 'curl %s\n' "$url" >> "$BOOTSTRAP_TEST_LOG"
+EOF
+
+chmod 700 "$temporaryDir/bin/brew" "$temporaryDir/bin/curl" "$temporaryDir/bin/mise" "$temporaryDir/bin/mise-installer"
 export BOOTSTRAP_TEST_LOG="$temporaryDir/actions.log"
+export BOOTSTRAP_TEST_MISE="$temporaryDir/bin/mise"
+export BOOTSTRAP_TEST_MISE_INSTALLER="$temporaryDir/bin/mise-installer"
 testPath="$temporaryDir/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 runInstaller() {
@@ -71,12 +108,20 @@ grep -Fqx 'DOTFILES_ROLE = "personal"' "$localConfig" || fail 'personal role was
 [[ "$(git config --file "$gitConfig" user.name)" == 'Test User' ]] || fail 'Git name was not written'
 [[ "$(git config --file "$gitConfig" user.email)" == 'test@example.com' ]] || fail 'Git email was not written'
 [[ "$(readlink "$temporaryDir/home/.config/mise/config.toml")" == "$repoRoot/home/.config/mise/config.toml" ]] || fail 'global mise config was not linked'
-grep -Fqx 'brew install git mise' "$BOOTSTRAP_TEST_LOG" || fail 'bootstrap dependencies were not requested'
+[[ -x "$temporaryDir/home/.local/bin/mise" ]] || fail 'official mise binary was not installed'
+grep -Fqx 'curl https://mise.run' "$BOOTSTRAP_TEST_LOG" || fail 'official mise installer was not requested'
+! grep -Eq '^brew install( |$)' "$BOOTSTRAP_TEST_LOG" || fail 'Homebrew formula installation was requested'
+HOME="$temporaryDir/home" PATH="$testPath" "$repoRoot/.mise/tasks/install-mise" --update
+grep -Fqx 'mise self-update --yes --no-plugins' "$BOOTSTRAP_TEST_LOG" || fail 'official mise self-update was not requested'
 grep -Fqx "brew bundle install --file=$repoRoot/Brewfile --no-upgrade" "$BOOTSTRAP_TEST_LOG" || fail 'Brewfile was not converged'
 [[ "$(grep -Fc 'brew bundle install ' "$BOOTSTRAP_TEST_LOG")" == 1 ]] || fail 'bootstrap converged the Brewfile more than once'
 ! grep -Fqx 'brew "fish"' "$repoRoot/Brewfile" || fail 'Fish remained Homebrew-managed'
+! grep -Fqx 'brew "git"' "$repoRoot/Brewfile" || fail 'Git remained Homebrew-managed'
+! grep -Fqx 'brew "mise"' "$repoRoot/Brewfile" || fail 'mise remained Homebrew-managed'
 grep -Fqx 'fish = "aqua:fish-shell/fish-shell"' "$repoRoot/home/.config/mise/config.toml" || fail 'Fish mise backend was not declared'
 grep -Fqx 'fish = "latest"' "$repoRoot/home/.config/mise/config.toml" || fail 'Fish mise version was not declared'
+grep -Fqx 'git = "conda:git"' "$repoRoot/home/.config/mise/config.toml" || fail 'Git mise backend was not declared'
+grep -Fqx 'git = "latest"' "$repoRoot/home/.config/mise/config.toml" || fail 'Git mise version was not declared'
 grep -Fqx "mise trust -y $repoRoot/mise.toml" "$BOOTSTRAP_TEST_LOG" || fail 'repository mise config trust was not requested'
 [[ "$(grep -Fc 'mise trust ' "$BOOTSTRAP_TEST_LOG")" == 1 ]] || fail 'bootstrap trusted more than the repository config'
 grep -Fqx 'mise bootstrap --yes' "$BOOTSTRAP_TEST_LOG" || fail 'mise bootstrap was not requested'
@@ -101,6 +146,7 @@ grep -Fqx 'mise bootstrap --yes --force-dotfiles' "$BOOTSTRAP_TEST_LOG" || fail 
 # A streamed installer creates the default ~/Source parent before cloning.
 mkdir -p "$temporaryDir/clone-bin" "$temporaryDir/streamed"
 ln -s "$temporaryDir/bin/brew" "$temporaryDir/clone-bin/brew"
+ln -s "$temporaryDir/bin/curl" "$temporaryDir/clone-bin/curl"
 ln -s "$temporaryDir/bin/mise" "$temporaryDir/clone-bin/mise"
 cp "$repoRoot/install.sh" "$temporaryDir/streamed/install.sh"
 
@@ -117,6 +163,7 @@ if [[ "${1:-}" == clone ]]; then
     cp "$BOOTSTRAP_TEST_REPO/mise.toml" "$target/mise.toml"
     cp "$BOOTSTRAP_TEST_REPO/home/.config/mise/config.toml" "$target/home/.config/mise/config.toml"
     cp "$BOOTSTRAP_TEST_REPO/.mise/tasks/brew-bundle" "$target/.mise/tasks/brew-bundle"
+    cp "$BOOTSTRAP_TEST_REPO/.mise/tasks/install-mise" "$target/.mise/tasks/install-mise"
     cp "$BOOTSTRAP_TEST_REPO/lib/utils.sh" "$target/lib/utils.sh"
     : > "$target/Brewfile"
     printf 'git %s\n' "$*" >> "$BOOTSTRAP_TEST_LOG"
@@ -146,5 +193,6 @@ defaultCheckout="$cloneHome/Source/dotfiles"
 [[ -d "$defaultCheckout/.git" ]] || fail 'default Source checkout was not cloned'
 grep -Fqx "git clone --depth 1 https://github.com/jcarter/dotfiles.git $defaultCheckout" "$BOOTSTRAP_TEST_LOG" || fail 'clone did not use the Source checkout default'
 [[ "$(readlink "$cloneHome/.config/mise/config.toml")" == "$defaultCheckout/home/.config/mise/config.toml" ]] || fail 'streamed install did not use the cloned config'
+[[ -x "$cloneHome/.local/bin/mise" ]] || fail 'streamed install did not install the official mise binary'
 
 printf '%s\n' 'Bootstrap contract tests passed.'

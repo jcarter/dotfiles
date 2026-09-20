@@ -84,7 +84,6 @@ installHomebrew() {
         exit 1
     fi
     eval "$("$brew" shellenv)"
-    "$brew" install git mise
 }
 
 resolveRepo() {
@@ -221,6 +220,11 @@ installDeclaredPackages() {
     "$repoRoot/.mise/tasks/brew-bundle"
 }
 
+installMise() {
+    "$repoRoot/.mise/tasks/install-mise"
+    export PATH="$HOME/.local/bin:$PATH"
+}
+
 prepareOnePassword() {
     [[ "$role" == personal ]] || return 0
     [[ "$createdRoleConfig" == true ]] || return 0
@@ -239,10 +243,11 @@ EOF
 
 runBootstrap() {
     local -a args=(bootstrap --yes)
+    local miseBin="$HOME/.local/bin/mise"
     [[ "$forceDotfiles" == true ]] && args+=(--force-dotfiles)
     cd "$repoRoot"
-    mise trust -y "$repoRoot/mise.toml"
-    mise "${args[@]}"
+    "$miseBin" trust -y "$repoRoot/mise.toml"
+    "$miseBin" "${args[@]}"
 }
 
 main() {
@@ -256,6 +261,7 @@ main() {
     ensureRoleConfig
     ensureGitIdentity
     linkGlobalMiseConfig
+    installMise
     installDeclaredPackages
     prepareOnePassword
     runBootstrap

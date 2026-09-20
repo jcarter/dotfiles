@@ -25,12 +25,14 @@ Run commands from `~/Source/dotfiles`:
 |---|---|
 | `./install.sh personal` or `./install.sh work` | Set up this Mac from a checkout |
 | `mise run sync` | Pull the checkout and apply its configuration |
-| `mise run update` | Upgrade packages and tools, then apply the configuration |
+| `mise run update` | Upgrade mise, Homebrew casks, and mise tools, then apply the configuration |
 | `mise run check` | Report Git, Homebrew, and mise state |
 | `mise run omp-render-settings` | Rebuild the live OMP config |
 | `mise run omp-sync-settings` | Save non-secret OMP changes |
 
 Bootstrap runs during setup, sync, and update. It refreshes Fisher plugins as part of each convergence.
+
+Mise installs from its official release binary. Mise manages Fish through Aqua and Git through Conda on both Intel and Apple Silicon. Homebrew owns only the casks declared in the Brewfile.
 
 Edit an existing linked file under `~/.config`; the repository changes at once. Run `git status`, commit, and push. Add new managed files under `home/` and map them in `mise.toml`.
 
@@ -55,4 +57,4 @@ Secrets stay in 1Password. Personal OMP uses Hindsight through fnox. Work OMP se
 | `home/.config/mise/config.toml` | Global mise tools |
 | `mise.toml` | Dotfile mappings and bootstrap order |
 | `.mise/tasks/` | Tasks for this repository |
-| `Brewfile` and `templates/` | Packages and generated-config sources |
+| `Brewfile` and `templates/` | GUI applications and generated-config sources |

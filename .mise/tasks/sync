@@ -12,4 +12,6 @@ fi
 
 git pull --ff-only
 "$DOTFILES_REPO_ROOT/.mise/tasks/brew-bundle"
+"$DOTFILES_REPO_ROOT/.mise/tasks/install-mise"
+export PATH="$HOME/.local/bin:$PATH"
 mise bootstrap

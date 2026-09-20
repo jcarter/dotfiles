@@ -22,7 +22,8 @@ globs:
 - `mise.toml` declares repository-local dotfile mappings, macOS defaults, and bootstrap ordering.
 - `home/` mirrors static files under the user's home directory.
 - `templates/` contains renderer inputs that must not be linked directly.
-- `Brewfile` owns system packages and GUI applications on both Macs.
+- `.mise/tasks/install-mise` owns the official mise binary at `~/.local/bin/mise`.
+- `Brewfile` owns GUI applications and vendor CLI casks on both Macs; mise owns ordinary command-line tools.
 - `.mise/tasks/brew-bundle` is the sole Brewfile implementation; `install.sh`, `sync`, and `update` call it explicitly.
 - `mise.local.toml` is untracked and contains non-secret host differences, including `DOTFILES_ROLE = "personal"` or `"work"`.
 - Secrets stay in 1Password and are resolved through fnox. Never write secret values into tracked files or local mise configuration.
@@ -34,7 +35,7 @@ globs:
 | `./install.sh personal` | Install or converge a personal Mac from a checkout. |
 | `./install.sh work` | Install or converge a work Mac from a checkout. |
 | `mise run sync` | Require a clean checkout, fast-forward from Git, and converge the Mac without an explicit upgrade pass; bootstrap refreshes Fisher plugins. |
-| `mise run update` | Upgrade declared Homebrew packages and mise tools, then converge; bootstrap refreshes Fisher plugins. |
+| `mise run update` | Upgrade mise, its tools, and declared brew casks; bootstrap refreshes Fisher plugins. |
 | `mise run check` | Report Git, Homebrew, and mise state without applying changes or reading secrets. |
 | `mise run omp-render-settings` | Generate the role-specific live OMP configuration. |
 | `mise run omp-sync-settings` | Copy OMP's non-secret changes back to the tracked template and restore sentinels. |
