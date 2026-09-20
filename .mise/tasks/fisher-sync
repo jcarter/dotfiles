@@ -3,7 +3,7 @@
 set -euo pipefail
 
 if ! command -v fish >/dev/null 2>&1; then
-    printf '%s\n' 'Fish is required. Run the Brewfile task first.' >&2
+    printf '%s\n' 'Fish is required. Run `mise install fish` first.' >&2
     exit 1
 fi
 
