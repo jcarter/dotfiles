@@ -45,6 +45,12 @@ cp "$BOOTSTRAP_TEST_MISE" "$MISE_INSTALL_PATH"
 chmod 700 "$MISE_INSTALL_PATH"
 EOF
 
+cat > "$temporaryDir/bin/open" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'open %s\n' "$*" >> "$BOOTSTRAP_TEST_LOG"
+EOF
+
 cat > "$temporaryDir/bin/curl" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -71,7 +77,7 @@ cp "$BOOTSTRAP_TEST_MISE_INSTALLER" "$output"
 printf 'curl %s\n' "$url" >> "$BOOTSTRAP_TEST_LOG"
 EOF
 
-chmod 700 "$temporaryDir/bin/brew" "$temporaryDir/bin/curl" "$temporaryDir/bin/mise" "$temporaryDir/bin/mise-installer"
+chmod 700 "$temporaryDir/bin/brew" "$temporaryDir/bin/curl" "$temporaryDir/bin/mise" "$temporaryDir/bin/mise-installer" "$temporaryDir/bin/open"
 export BOOTSTRAP_TEST_LOG="$temporaryDir/actions.log"
 export BOOTSTRAP_TEST_MISE="$temporaryDir/bin/mise"
 export BOOTSTRAP_TEST_MISE_INSTALLER="$temporaryDir/bin/mise-installer"
@@ -99,6 +105,28 @@ if updateOutput="$(runInstaller "$temporaryDir/home" --update 2>&1)"; then
 fi
 grep -Fq 'run `mise run sync`' <<<"$updateOutput" || fail 'retired --update option lacked sync guidance'
 [[ ! -s "$BOOTSTRAP_TEST_LOG" ]] || fail 'retired --update option ran external setup actions'
+
+# A fresh work setup gets the same interactive 1Password preparation as personal.
+promptRepo="$temporaryDir/prompt-repo"
+promptHome="$temporaryDir/prompt-home"
+promptLog="$temporaryDir/prompt-actions.log"
+cp -R "$repoRoot" "$promptRepo"
+promptOutput="$(
+    printf '\n' | env \
+        -u XDG_CONFIG_HOME \
+        -u DOTFILES_ROLE \
+        -u DOTFILES_DIR \
+        -u DOTFILES_REPO \
+        HOME="$promptHome" \
+        PATH="$testPath" \
+        MISE_PROJECT_ROOT="$promptRepo" \
+        BOOTSTRAP_TEST_LOG="$promptLog" \
+        GIT_USER_NAME='Test User' \
+        GIT_USER_EMAIL='test@example.com' \
+        /usr/bin/script -q /dev/null "$promptRepo/install.sh" work
+)"
+grep -Fq 'Integrate with' <<<"$promptOutput" || fail 'work setup did not show the 1Password integration prompt'
+grep -Fqx 'open -a 1Password' "$promptLog" || fail 'work setup did not open 1Password'
 
 runInstaller "$temporaryDir/home" personal >/dev/null
 

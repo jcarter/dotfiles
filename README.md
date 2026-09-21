@@ -1,5 +1,14 @@
 # Dotfiles
 
+- [Mise](https://github.com/jdx/mise) for CLI tools
+- [Brew](https://github.com/homebrew/brew) for applications
+- [Everforest](https://github.com/sainnhe/everforest) for color theme
+- [Maple Mono](https://github.com/subframe7536/maple-font) for font
+
+Managed files are symnlinked to `~/.config` so changes made directly to the files will be reflected in the repo. Add new managed files under `home/` and map them in `mise.toml`.
+
+# Install
+
 Command on a fresh Mac:
 
 ```sh
@@ -15,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/jcarter/dotfiles/main/install.sh |
   DOTFILES_DIR="$HOME/elsewhere/dotfiles" bash -s -- personal
 ```
 
-Personal setup pauses for 1Password. Sign in, then enable **Settings > Developer > Integrate with 1Password CLI**.
+Setup pauses for 1Password. Sign in, then enable **Settings > Developer > Integrate with 1Password CLI**.
 
 ## Use
 
@@ -30,13 +39,6 @@ Run commands from `~/Source/dotfiles`:
 | `mise run omp-render-settings` | Rebuild the live OMP config |
 | `mise run omp-sync-settings` | Save non-secret OMP changes |
 
-Bootstrap runs during setup, sync, and update. It refreshes Fisher plugins as part of each convergence.
-
-Mise installs from its official release binary. Mise manages Fish through Aqua and Git through Conda on both Intel and Apple Silicon. Homebrew owns only the casks declared in the Brewfile.
-
-Edit an existing linked file under `~/.config`; the repository changes at once. Run `git status`, commit, and push. Add new managed files under `home/` and map them in `mise.toml`.
-
-Fish, Kitty, and Yazi load their active Everforest configuration from this repository. The standalone `everforest-*` repositories are publication targets; VS Code remains an installed extension.
 
 ## Per-computer settings
 

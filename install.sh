@@ -226,7 +226,6 @@ installMise() {
 }
 
 prepareOnePassword() {
-    [[ "$role" == personal ]] || return 0
     [[ "$createdRoleConfig" == true ]] || return 0
     [[ "${DOTFILES_SKIP_1PASSWORD_PROMPT:-}" == 1 ]] && return 0
     if [[ -t 1 && -r /dev/tty ]]; then
@@ -234,7 +233,7 @@ prepareOnePassword() {
         cat >/dev/tty <<'EOF'
 
 Sign in to 1Password and enable Settings > Developer > Integrate with
-1Password CLI. The personal OMP configuration will request Touch ID.
+1Password CLI. Secret-backed tools may request Touch ID when used.
 Press Return when 1Password is ready.
 EOF
         IFS= read -r _ </dev/tty
