@@ -6,8 +6,6 @@
 minimum_release_age = "7d"
 
 [tool_alias]
-delta = "cargo:git-delta"
-fd = "cargo:fd-find"
 fish = "aqua:fish-shell/fish-shell"
 git = "conda:git"
 markitdown = "pipx:markitdown"
@@ -16,6 +14,7 @@ ouch = "github:ouch-org/ouch"
 pi-coding-agent = "npm:@earendil-works/pi-coding-agent"
 
 [tools]
+atuin = "latest"
 bat = "latest"
 delta = "latest"
 elixir = "latest"

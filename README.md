@@ -2,6 +2,7 @@
 
 - [Mise](https://github.com/jdx/mise) for CLI tools
 - [Brew](https://github.com/homebrew/brew) for applications
+- [Atuin](https://atuin.sh/) for shell history
 - [Everforest](https://github.com/sainnhe/everforest) for color theme
 - [Maple Mono](https://github.com/subframe7536/maple-font) for font
 
@@ -57,6 +58,8 @@ Secrets stay in 1Password. Personal OMP uses Hindsight through fnox. Work OMP se
 |---|---|
 | `home/` | Files linked into `$HOME` |
 | `home/.config/mise/config.toml` | Global mise tools |
+| `home/.config/mise/miserc.toml` | Enables automatic platform config selection |
+| `home/.config/mise/config.macos-x64.toml` | Intel fallbacks |
 | `mise.toml` | Dotfile mappings and bootstrap order |
 | `.mise/tasks/` | Tasks for this repository |
 | `Brewfile` and `templates/` | GUI applications and generated-config sources |

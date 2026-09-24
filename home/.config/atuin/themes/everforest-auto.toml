@@ -1,0 +1,20 @@
+[theme]
+name = "everforest-auto"
+
+# Use Kitty's active ANSI palette so Atuin follows macOS light and dark mode.
+# Base is intentionally omitted so the terminal owns foreground/background.
+[colors]
+AlertInfo = "@ansi_(6)"
+AlertWarn = "@ansi_(3)"
+AlertError = "@ansi_(1)"
+Annotation = "@ansi_(8)"
+Guidance = "@ansi_(8)"
+Important = "@ansi_(4)"
+Title = "@ansi_(2)"
+Muted = "@ansi_(8)"
+SyntaxCommand = "@ansi_(2)"
+SyntaxFlag = "@ansi_(3)"
+SyntaxString = "@ansi_(6)"
+SyntaxVariable = "@ansi_(5)"
+SyntaxOperator = "@ansi_(4)"
+SyntaxComment = "@ansi_(8)"

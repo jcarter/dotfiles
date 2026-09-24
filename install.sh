@@ -198,22 +198,22 @@ ensureGitIdentity() {
 }
 
 linkGlobalMiseConfig() {
-    local configDir target linkTarget
+    local configDir configName target linkTarget
     configDir="${XDG_CONFIG_HOME:-$HOME/.config}/mise"
-    target="$configDir/config.toml"
-    linkTarget="$repoRoot/home/.config/mise/config.toml"
     mkdir -p "$configDir"
 
-    if [[ -e "$target" || -L "$target" ]]; then
+    for configName in miserc.toml config.toml config.macos-x64.toml; do
+        target="$configDir/$configName"
+        linkTarget="$repoRoot/home/.config/mise/$configName"
         if [[ -L "$target" && "$(readlink "$target")" == "$linkTarget" ]]; then
-            return
+            continue
         fi
-        if [[ "$forceDotfiles" != true ]]; then
+        if [[ ( -e "$target" || -L "$target" ) && "$forceDotfiles" != true ]]; then
             printf 'Refusing to replace existing %s without --force-dotfiles.\n' "$target" >&2
             exit 1
         fi
-    fi
-    ln -sfn "$linkTarget" "$target"
+        ln -sfn "$linkTarget" "$target"
+    done
 }
 
 installDeclaredPackages() {

@@ -13,6 +13,10 @@ if status is-interactive
 
     mise activate fish | source
 
+    if command -q atuin
+        atuin init fish | source
+    end
+
     # Use Kitty's active ANSI palette so file colors follow Everforest when
     # macOS switches between light and dark appearance.
     if command -q vivid

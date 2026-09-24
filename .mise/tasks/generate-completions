@@ -23,4 +23,5 @@ generate() {
 }
 
 export PATH="$HOME/.local/bin:$PATH"
+generate atuin atuin gen-completions --shell fish
 generate mise mise completion fish

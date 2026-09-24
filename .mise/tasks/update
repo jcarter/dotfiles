@@ -8,5 +8,6 @@ source "${MISE_PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 export PATH="$HOME/.local/bin:$PATH"
 "$DOTFILES_REPO_ROOT/.mise/tasks/brew-bundle" --upgrade
 cd "$DOTFILES_REPO_ROOT"
+dotfiles_prepare_mise
 mise upgrade
 mise bootstrap

@@ -16,7 +16,7 @@ mkdir -p "$temporaryDir/bin" "$temporaryDir/home" "$repoRoot/home/.config/mise" 
 cp "$sourceRepoRoot/install.sh" "$repoRoot/install.sh"
 cp "$sourceRepoRoot/mise.toml" "$repoRoot/mise.toml"
 cp "$sourceRepoRoot/Brewfile" "$repoRoot/Brewfile"
-cp "$sourceRepoRoot/home/.config/mise/config.toml" "$repoRoot/home/.config/mise/config.toml"
+cp "$sourceRepoRoot"/home/.config/mise/{miserc,config,config.macos-x64}.toml "$repoRoot/home/.config/mise/"
 cp "$sourceRepoRoot/.mise/tasks/brew-bundle" "$repoRoot/.mise/tasks/brew-bundle"
 cp "$sourceRepoRoot/.mise/tasks/install-mise" "$repoRoot/.mise/tasks/install-mise"
 cp "$sourceRepoRoot/lib/utils.sh" "$repoRoot/lib/utils.sh"
@@ -34,6 +34,14 @@ EOF
 cat > "$temporaryDir/bin/mise" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ "${1:-}" == bootstrap ]]; then
+    for configName in miserc.toml config.toml config.macos-x64.toml; do
+        if [[ ! -L "$HOME/.config/mise/$configName" ]]; then
+            printf 'mise bootstrap missing early config link: %s\n' "$configName" >&2
+            exit 9
+        fi
+    done
+fi
 printf 'mise %s\n' "$*" >> "$BOOTSTRAP_TEST_LOG"
 EOF
 
@@ -112,7 +120,7 @@ promptHome="$temporaryDir/prompt-home"
 promptLog="$temporaryDir/prompt-actions.log"
 cp -R "$repoRoot" "$promptRepo"
 promptOutput="$(
-    printf '\n' | env \
+    env \
         -u XDG_CONFIG_HOME \
         -u DOTFILES_ROLE \
         -u DOTFILES_DIR \
@@ -123,7 +131,22 @@ promptOutput="$(
         BOOTSTRAP_TEST_LOG="$promptLog" \
         GIT_USER_NAME='Test User' \
         GIT_USER_EMAIL='test@example.com' \
-        /usr/bin/script -q /dev/null "$promptRepo/install.sh" work
+        /usr/bin/expect -f - "$promptRepo/install.sh" <<'EOF'
+set timeout 10
+spawn -noecho [lindex $argv 0] work
+expect {
+    "Press Return when 1Password is ready." { send -- "\r" }
+    timeout { puts stderr "Timed out waiting for the 1Password prompt"; exit 1 }
+    eof { puts stderr "Installer exited before the 1Password prompt"; exit 1 }
+}
+expect {
+    eof {}
+    timeout { puts stderr "Timed out waiting for the installer to finish"; exit 1 }
+}
+set result [wait]
+if {[lindex $result 2] != 0 || [lindex $result 4] eq "CHILDKILLED"} { exit 1 }
+exit [lindex $result 3]
+EOF
 )"
 grep -Fq 'Integrate with' <<<"$promptOutput" || fail 'work setup did not show the 1Password integration prompt'
 grep -Fqx 'open -a 1Password' "$promptLog" || fail 'work setup did not open 1Password'
@@ -135,7 +158,10 @@ gitConfig="$temporaryDir/home/.config/git/config.local"
 grep -Fqx 'DOTFILES_ROLE = "personal"' "$localConfig" || fail 'personal role was not written'
 [[ "$(git config --file "$gitConfig" user.name)" == 'Test User' ]] || fail 'Git name was not written'
 [[ "$(git config --file "$gitConfig" user.email)" == 'test@example.com' ]] || fail 'Git email was not written'
-[[ "$(readlink "$temporaryDir/home/.config/mise/config.toml")" == "$repoRoot/home/.config/mise/config.toml" ]] || fail 'global mise config was not linked'
+for configName in miserc.toml config.toml config.macos-x64.toml; do
+    [[ "$(readlink "$temporaryDir/home/.config/mise/$configName")" == "$repoRoot/home/.config/mise/$configName" ]] ||
+        fail "global mise config was not linked: $configName"
+done
 [[ -x "$temporaryDir/home/.local/bin/mise" ]] || fail 'official mise binary was not installed'
 grep -Fqx 'curl https://mise.run' "$BOOTSTRAP_TEST_LOG" || fail 'official mise installer was not requested'
 ! grep -Eq '^brew install( |$)' "$BOOTSTRAP_TEST_LOG" || fail 'Homebrew formula installation was requested'
@@ -189,7 +215,7 @@ if [[ "${1:-}" == clone ]]; then
     [[ -d "$(dirname "$target")" ]] || exit 9
     mkdir -p "$target/.git" "$target/home/.config/mise" "$target/.mise/tasks" "$target/lib"
     cp "$BOOTSTRAP_TEST_REPO/mise.toml" "$target/mise.toml"
-    cp "$BOOTSTRAP_TEST_REPO/home/.config/mise/config.toml" "$target/home/.config/mise/config.toml"
+    cp "$BOOTSTRAP_TEST_REPO"/home/.config/mise/{miserc,config,config.macos-x64}.toml "$target/home/.config/mise/"
     cp "$BOOTSTRAP_TEST_REPO/.mise/tasks/brew-bundle" "$target/.mise/tasks/brew-bundle"
     cp "$BOOTSTRAP_TEST_REPO/.mise/tasks/install-mise" "$target/.mise/tasks/install-mise"
     cp "$BOOTSTRAP_TEST_REPO/lib/utils.sh" "$target/lib/utils.sh"
@@ -220,7 +246,10 @@ env \
 defaultCheckout="$cloneHome/Source/dotfiles"
 [[ -d "$defaultCheckout/.git" ]] || fail 'default Source checkout was not cloned'
 grep -Fqx "git clone --depth 1 https://github.com/jcarter/dotfiles.git $defaultCheckout" "$BOOTSTRAP_TEST_LOG" || fail 'clone did not use the Source checkout default'
-[[ "$(readlink "$cloneHome/.config/mise/config.toml")" == "$defaultCheckout/home/.config/mise/config.toml" ]] || fail 'streamed install did not use the cloned config'
+for configName in miserc.toml config.toml config.macos-x64.toml; do
+    [[ "$(readlink "$cloneHome/.config/mise/$configName")" == "$defaultCheckout/home/.config/mise/$configName" ]] ||
+        fail "streamed install did not link global mise config: $configName"
+done
 [[ -x "$cloneHome/.local/bin/mise" ]] || fail 'streamed install did not install the official mise binary'
 
 printf '%s\n' 'Bootstrap contract tests passed.'

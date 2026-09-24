@@ -15,12 +15,15 @@ NSGlobalDomain = { AppleInterfaceStyle = "Dark" }
 
 [dotfiles]
 "~/.hushlogin" = { source = "home/.hushlogin" }
+"~/.config/atuin" = { source = "home/.config/atuin", mode = "symlink-each" }
 "~/.config/fish" = { source = "home/.config/fish", mode = "symlink-each" }
 "~/.config/fnox" = { source = "home/.config/fnox", mode = "symlink-each" }
 "~/.config/git" = { source = "home/.config/git", mode = "symlink-each" }
 "~/.config/gh" = { source = "home/.config/gh", mode = "symlink-each" }
 "~/.config/kitty" = { source = "home/.config/kitty", mode = "symlink-each" }
+"~/.config/mise/config.macos-x64.toml" = { source = "home/.config/mise/config.macos-x64.toml", mode = "symlink" }
 "~/.config/mise/config.toml" = { source = "home/.config/mise/config.toml", mode = "symlink" }
+"~/.config/mise/miserc.toml" = { source = "home/.config/mise/miserc.toml", mode = "symlink" }
 "~/.config/yazi" = { source = "home/.config/yazi", mode = "symlink-each" }
 "~/.omp/agent/themes" = { source = "home/.omp/agent/themes", mode = "symlink-each" }
 "~/.local/bin/delta-everforest" = { source = "home/.local/bin/delta-everforest", mode = "symlink" }

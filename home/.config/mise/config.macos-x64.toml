@@ -1,0 +1,7 @@
+# Intel-only fallback: Aqua's Delta and fd packages do not support this Mac.
+# Keep Atuin on its existing Cargo backend here to avoid changing its install.
+# Remove this file and its bootstrap links when no Intel Macs use these dotfiles.
+[tool_alias]
+atuin = "cargo:atuin"
+delta = "cargo:git-delta"
+fd = "cargo:fd-find"
