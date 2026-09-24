@@ -17,6 +17,10 @@ if status is-interactive
         atuin init fish | source
     end
 
+    if command -q zoxide
+        zoxide init fish --cmd cd | source
+    end
+
     # Use Kitty's active ANSI palette so file colors follow Everforest when
     # macOS switches between light and dark appearance.
     if command -q vivid
