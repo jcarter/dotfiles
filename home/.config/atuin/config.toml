@@ -1,2 +1,5 @@
+# Up arrow searches the current directory; Ctrl-r still starts global.
+filter_mode_shell_up_key_binding = "directory"
+
 [theme]
 name = "everforest-auto"
