@@ -6,6 +6,8 @@ if status is-login
     end
 end
 
+# mise's brew-cask links cask commands here on both architectures, even without Homebrew.
+fish_add_path --path /opt/homebrew/bin
 fish_add_path --path --move "$HOME/.local/bin"
 
 if status is-interactive

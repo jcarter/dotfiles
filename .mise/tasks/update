@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-#MISE description="Upgrade mise, its tools, and declared brew casks."
+#MISE description="Upgrade mise, its tools, and declared packages."
 set -euo pipefail
 
 source "${MISE_PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/lib/utils.sh"
 
 "$DOTFILES_REPO_ROOT/.mise/tasks/install-mise" --update
 export PATH="$HOME/.local/bin:$PATH"
-"$DOTFILES_REPO_ROOT/.mise/tasks/brew-bundle" --upgrade
 cd "$DOTFILES_REPO_ROOT"
 dotfiles_prepare_mise
+mise bootstrap packages upgrade --yes
 mise upgrade
 mise bootstrap

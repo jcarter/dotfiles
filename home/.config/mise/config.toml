@@ -14,6 +14,7 @@ ouch = "github:ouch-org/ouch"
 pi-coding-agent = "npm:@earendil-works/pi-coding-agent"
 
 [tools]
+1password-cli = "latest"
 agent-browser = "latest"
 atuin = "latest"
 bat = "latest"

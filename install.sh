@@ -2,6 +2,7 @@
 
 # Zero-stage macOS installer. It can run from a checkout or directly from a
 # public raw GitHub URL: curl .../install.sh | bash -s -- personal
+# Requires only macOS Command Line Tools; mise installs everything else.
 set -euo pipefail
 [[ "${DOTFILES_INSTALL_DEBUG:-}" == 1 ]] && set -x
 
@@ -61,29 +62,11 @@ parseArgs() {
     done
 }
 
-brewBin() {
-    if command -v brew >/dev/null 2>&1; then
-        command -v brew
-    elif [[ -x /opt/homebrew/bin/brew ]]; then
-        printf '%s\n' /opt/homebrew/bin/brew
-    elif [[ -x /usr/local/bin/brew ]]; then
-        printf '%s\n' /usr/local/bin/brew
-    fi
-}
-
-installHomebrew() {
-    local brew
-    brew="$(brewBin || true)"
-    if [[ -z "$brew" ]]; then
-        printf '%s\n' 'Installing Homebrew (macOS may first install Command Line Tools)...'
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        brew="$(brewBin || true)"
-    fi
-    if [[ -z "$brew" ]]; then
-        printf '%s\n' 'Homebrew was not found after installation. Complete its post-install instructions, then rerun.' >&2
-        exit 1
-    fi
-    eval "$("$brew" shellenv)"
+ensureCommandLineTools() {
+    xcode-select -p >/dev/null 2>&1 && return
+    xcode-select --install || true
+    printf '%s\n' 'Command Line Tools are required for Git. Rerun this installer once their installation finishes.' >&2
+    exit 1
 }
 
 resolveRepo() {
@@ -216,13 +199,16 @@ linkGlobalMiseConfig() {
     done
 }
 
-installDeclaredPackages() {
-    "$repoRoot/.mise/tasks/brew-bundle"
-}
-
 installMise() {
     "$repoRoot/.mise/tasks/install-mise"
     export PATH="$HOME/.local/bin:$PATH"
+}
+
+installDeclaredPackages() {
+    local miseBin="$HOME/.local/bin/mise"
+    cd "$repoRoot"
+    "$miseBin" trust -y "$repoRoot/mise.toml"
+    "$miseBin" bootstrap packages apply --yes
 }
 
 prepareOnePassword() {
@@ -242,11 +228,9 @@ EOF
 
 runBootstrap() {
     local -a args=(bootstrap --yes)
-    local miseBin="$HOME/.local/bin/mise"
     [[ "$forceDotfiles" == true ]] && args+=(--force-dotfiles)
     cd "$repoRoot"
-    "$miseBin" trust -y "$repoRoot/mise.toml"
-    "$miseBin" "${args[@]}"
+    "$HOME/.local/bin/mise" "${args[@]}"
 }
 
 main() {
@@ -255,7 +239,7 @@ main() {
         printf '%s\n' 'This installer currently supports macOS only.' >&2
         exit 1
     fi
-    installHomebrew
+    ensureCommandLineTools
     resolveRepo
     ensureRoleConfig
     ensureGitIdentity

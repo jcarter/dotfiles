@@ -13,6 +13,15 @@ preferred_view_style = "list"
 NSGlobalDomain = { AppleInterfaceStyle = "Dark" }
 "com.apple.dock" = { "autohide-delay" = 0.0, "autohide-time-modifier" = 0.2 }
 
+[bootstrap.brew]
+adopt = true
+
+[bootstrap.packages]
+"brew-cask:1password" = "latest"
+"brew-cask:font-maple-mono-nf" = "latest"
+"brew-cask:kitty" = "latest"
+"brew-cask:obsidian" = "latest"
+
 [dotfiles]
 "~/.hushlogin" = { source = "home/.hushlogin" }
 "~/.config/atuin" = { source = "home/.config/atuin", mode = "symlink-each" }

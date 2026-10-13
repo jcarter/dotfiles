@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Report Git, Homebrew, and mise state without changing it"
+#MISE description="Report Git, package, and mise state without changing it"
 set -uo pipefail
 
 source "${MISE_PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/lib/utils.sh"
@@ -21,19 +21,12 @@ else
     reportFailure
 fi
 
-printf '\nHomebrew bundle:\n'
-brew="$(dotfiles_brew || true)"
-if [[ -z "$brew" ]]; then
-    printf '%s\n' 'Homebrew: not installed' >&2
-    reportFailure
-else
-    "$brew" bundle check --file="$DOTFILES_REPO_ROOT/Brewfile" --no-upgrade || reportFailure
-fi
-
 printf '\nMise configuration:\n'
 if [[ -x "$HOME/.local/bin/mise" ]]; then
     export PATH="$HOME/.local/bin:$PATH"
     mise config || reportFailure
+    printf '\nDeclared packages:\n'
+    mise bootstrap packages status --missing || reportFailure
     printf '\nMise bootstrap dry run:\n'
     mise bootstrap --dry-run --yes || reportFailure
 else
