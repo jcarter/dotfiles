@@ -36,6 +36,8 @@ export XDG_CONFIG_HOME="$temporaryDir/home/.config"
 export XDG_DATA_HOME="$temporaryDir/home/.local/share"
 export XDG_STATE_HOME="$temporaryDir/home/.local/state"
 cp "$repoRoot/templates/omp/config.yml" "$temporaryDir/source/templates/omp/config.yml"
+printf '%s\n' 'modelRoles:' '  default: personal/model' > "$temporaryDir/source/templates/omp/model-roles.personal.yml"
+printf '%s\n' 'modelRoles:' '  default: work/model' > "$temporaryDir/source/templates/omp/model-roles.work.yml"
 protectedValue='https://hindsight.example/api?scope=prod*&set=[one]'
 
 cat > "$temporaryDir/bin/fnox" <<'EOF'
@@ -59,10 +61,12 @@ assertContains '  backend: hindsight' "$temporaryDir/live/agent/config.yml"
 assertContains "  apiUrl: \"$protectedValue\"" "$temporaryDir/live/agent/config.yml"
 assertNotContains "$protectedValue" "$temporaryDir/personal.out"
 [[ "$(stat -f '%Lp' "$temporaryDir/live/agent/config.yml")" == '600' ]] || fail 'live config is not mode 0600'
+assertContains '  default: personal/model' "$temporaryDir/live/agent/config.yml"
 
 # Simulate an OMP-authored non-secret setting, then ensure sync keeps only the
 # renderer sentinels in the committed source.
 sed -i '' 's/mode: prompt/mode: interactive/' "$temporaryDir/live/agent/config.yml"
+sed -i '' 's|personal/model|personal/edited|' "$temporaryDir/live/agent/config.yml"
 DOTFILES_ROLE=personal \
   DOTFILES_REPO_ROOT="$temporaryDir/source" \
   OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
@@ -76,6 +80,23 @@ assertContains '  mode: interactive' "$temporaryDir/source/templates/omp/config.
 assertContains '  bankId: Code' "$temporaryDir/source/templates/omp/config.yml"
 assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
 assertNotContains "$protectedValue" "$temporaryDir/sync.out"
+assertContains '  default: personal/edited' "$temporaryDir/source/templates/omp/model-roles.personal.yml"
+assertContains '  default: work/model' "$temporaryDir/source/templates/omp/model-roles.work.yml"
+assertNotContains 'modelRoles' "$temporaryDir/source/templates/omp/config.yml"
+
+# OMP may rewrite apiUrl without the renderer's YAML quotes; sync must still restore the sentinel.
+liveConfig="$(<"$temporaryDir/live/agent/config.yml")"
+quotedLine="  apiUrl: \"$protectedValue\""
+shopt -u patsub_replacement 2>/dev/null || true
+printf '%s\n' "${liveConfig//"$quotedLine"/  apiUrl: $protectedValue}" > "$temporaryDir/live/agent/config.yml"
+DOTFILES_ROLE=personal \
+  DOTFILES_REPO_ROOT="$temporaryDir/source" \
+  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
+  FNOX_CONFIG_PATH="$temporaryDir/fnox.toml" \
+  FNOX_BIN="$temporaryDir/bin/fnox with spaces" \
+  "$repoRoot/.mise/tasks/omp-sync-settings" > "$temporaryDir/unquoted-sync.out"
+assertContains '  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__' "$temporaryDir/source/templates/omp/config.yml"
+assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
 
 DOTFILES_ROLE=work \
   DOTFILES_REPO_ROOT="$temporaryDir/source" \
@@ -86,6 +107,7 @@ DOTFILES_ROLE=work \
 assertContains '  backend: off' "$temporaryDir/live/agent/config.yml"
 assertContains '  apiUrl: ""' "$temporaryDir/live/agent/config.yml"
 assertNotContains "$protectedValue" "$temporaryDir/work.out"
+assertContains '  default: work/model' "$temporaryDir/live/agent/config.yml"
 
 # Installed commands are symlinks. They must still locate the repository when
 # called directly outside a mise task.
@@ -107,6 +129,9 @@ assertContains '  backend: __OMP_MEMORY_BACKEND__' "$temporaryDir/source/templat
 assertContains '  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__' "$temporaryDir/source/templates/omp/config.yml"
 assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
 assertNotContains "$protectedValue" "$temporaryDir/work-sync.out"
+assertContains '  default: work/model' "$temporaryDir/source/templates/omp/model-roles.work.yml"
+assertContains '  default: personal/edited' "$temporaryDir/source/templates/omp/model-roles.personal.yml"
+assertNotContains 'modelRoles' "$temporaryDir/source/templates/omp/config.yml"
 
 expectFailure() {
   if "$@" >/dev/null 2>&1; then
@@ -120,6 +145,14 @@ cp "$temporaryDir/live/agent/config.yml" "$temporaryDir/before-failure-live.yml"
 expectFailure env DOTFILES_ROLE=other OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
   FNOX_BIN="$temporaryDir/bin/not-called" "$repoRoot/.mise/tasks/omp-render-settings"
 cmp -s "$temporaryDir/before-failure-live.yml" "$temporaryDir/live/agent/config.yml" || fail 'invalid role changed live config'
+
+# A role without a model-roles file must not touch the live config.
+mkdir "$temporaryDir/no-roles"
+cp "$temporaryDir/source/templates/omp/config.yml" "$temporaryDir/no-roles/config.yml"
+expectFailure env DOTFILES_ROLE=work OMP_TEMPLATE_PATH="$temporaryDir/no-roles/config.yml" \
+  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" FNOX_BIN="$temporaryDir/bin/not-called" \
+  "$repoRoot/.mise/tasks/omp-render-settings"
+cmp -s "$temporaryDir/before-failure-live.yml" "$temporaryDir/live/agent/config.yml" || fail 'missing model roles changed live config'
 
 cp "$temporaryDir/source/templates/omp/config.yml" "$temporaryDir/source/missing-sentinel.yml"
 sed -i '' 's/__OMP_MEMORY_BACKEND__/removed/' "$temporaryDir/source/missing-sentinel.yml"

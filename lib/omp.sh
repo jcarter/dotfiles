@@ -4,6 +4,7 @@
 
 readonly ompBackendSentinel='__OMP_MEMORY_BACKEND__'
 readonly ompHindsightSentinel='__FNOX_OMP_HINDSIGHT_API_URL__'
+readonly ompModelRolesSentinel='__OMP_MODEL_ROLES__'
 
 omp_role_backend() {
   case "${DOTFILES_ROLE:-}" in
@@ -23,6 +24,28 @@ omp_init_paths() {
   liveConfigPath="${OMP_CONFIG_PATH:-$HOME/.omp/agent/config.yml}"
   fnoxConfigPath="${FNOX_CONFIG_PATH:-$HOME/.config/fnox/config.toml}"
   fnoxBin="${FNOX_BIN:-fnox}"
+  modelRolesPath="$(dirname "$sourcePath")/model-roles.${DOTFILES_ROLE:-}.yml"
+}
+
+# Split the top-level modelRoles block out of a config. Sets modelRolesBlock and
+# strippedConfig (the config with the block replaced by the model-roles sentinel).
+omp_extract_model_roles() {
+  local line inBlock=0 rest='' block=''
+  while IFS= read -r line; do
+    if [[ "$line" == modelRoles:* ]]; then
+      inBlock=1
+      block="$line"
+      rest+="$ompModelRolesSentinel"$'\n'
+    elif (( inBlock )) && [[ "$line" == [[:space:]]* ]]; then
+      block+=$'\n'"$line"
+    else
+      inBlock=0
+      rest+="$line"$'\n'
+    fi
+  done <<<"$1"
+  [[ -n "$block" ]] || return 1
+  modelRolesBlock="$block"
+  strippedConfig="${rest%$'\n'}"
 }
 
 omp_hindsight_api_url() {

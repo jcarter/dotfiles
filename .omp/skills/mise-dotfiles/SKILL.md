@@ -20,7 +20,7 @@ globs:
 - `home/.config/mise/config.toml` declares global tools and must remain plain data without executable repository logic.
 - `mise.toml` declares repository-local dotfile mappings, macOS defaults, packages, and bootstrap ordering.
 - `home/` mirrors static files under the user's home directory.
-- `templates/` contains renderer inputs that must not be linked directly.
+- `templates/` contains renderer inputs that must not be linked directly. `templates/omp/config.yml` holds the shared OMP settings plus the `__OMP_MODEL_ROLES__` sentinel; `templates/omp/model-roles.<role>.yml` holds that role's `modelRoles` block.
 - `.mise/tasks/install-mise` owns the official mise binary at `~/.local/bin/mise`.
 - `mise.toml` `[bootstrap.packages]` owns GUI applications and fonts through mise's `brew-cask` manager with `[bootstrap.brew] adopt = true`; Homebrew is not installed or required. `[tools]` owns command-line tools, including `op` (`1password-cli`).
 - `install.sh` ensures Xcode Command Line Tools, installs mise, trusts `mise.toml`, runs `mise bootstrap packages apply --yes`, prompts for 1Password, then runs `mise bootstrap --yes`.

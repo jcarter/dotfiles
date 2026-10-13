@@ -26,8 +26,13 @@ if [[ ! -f "$sourcePath" ]]; then
   exit 1
 fi
 
+if [[ ! -f "$modelRolesPath" ]]; then
+  printf 'OMP model roles not found for role %s: %s\n' "$role" "$modelRolesPath" >&2
+  exit 1
+fi
+
 template="$(<"$sourcePath")"
-if [[ "$template" != *"$ompBackendSentinel"* || "$template" != *"$ompHindsightSentinel"* ]]; then
+if [[ "$template" != *"$ompBackendSentinel"* || "$template" != *"$ompHindsightSentinel"* || "$template" != *"$ompModelRolesSentinel"* ]]; then
   printf '%s\n' 'OMP template is missing a required renderer sentinel.' >&2
   exit 1
 fi
@@ -39,9 +44,12 @@ else
   hindsightValue='""'
 fi
 
+modelRoles="$(<"$modelRolesPath")"
+
 rendered="${template//$ompBackendSentinel/$memoryBackend}"
 rendered="${rendered//$ompHindsightSentinel/$hindsightValue}"
-if [[ "$rendered" == *"$ompBackendSentinel"* || "$rendered" == *"$ompHindsightSentinel"* ]]; then
+rendered="${rendered%%"$ompModelRolesSentinel"*}${modelRoles}${rendered#*"$ompModelRolesSentinel"}"
+if [[ "$rendered" == *"$ompBackendSentinel"* || "$rendered" == *"$ompHindsightSentinel"* || "$rendered" == *"$ompModelRolesSentinel"* ]]; then
   printf '%s\n' 'OMP renderer left an unresolved sentinel.' >&2
   exit 1
 fi

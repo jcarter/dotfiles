@@ -12,21 +12,13 @@ colorBlindMode: false
 compaction:
   handoffSaveToDisk: true
 dev:
-  autoqa:
-    consent: denied
+  autoqaConsent: denied
 disabledExtensions:
   []
-inspect_image:
-  enabled: true
 interruptMode: immediate
 memories:
   enabled: true
-modelRoles:
-  commit: openai-codex/gpt-5.5:off
-  default: openai-codex/gpt-5.6-terra:high
-  plan: openai-codex/gpt-5.6-sol:xhigh
-  slow: openai-codex/gpt-5.5:xhigh
-  smol: openai-codex/gpt-5.6-luna:high
+__OMP_MODEL_ROLES__
 renderMermaid:
   enabled: true
 secrets:
@@ -36,13 +28,13 @@ task:
   eager: always
   isolation:
     commits: generic
-    mode: none
+    enabled: false
 theme:
   dark: everforest-dark
   light: everforest-light
 memory:
   backend: __OMP_MEMORY_BACKEND__
-setupVersion: 1
+setupVersion: 2
 symbolPreset: nerd
 statusLine:
   preset: default
@@ -54,7 +46,6 @@ loop:
   mode: prompt
 stt:
   enabled: true
-  modelName: base.en
   submitTrigger: never
 tools:
   approvalMode: yolo
@@ -71,6 +62,8 @@ hindsight:
 magicKeywords:
   enabled: true
 features:
-  unexpectedStopDetection: false
+  unexpectedStopDetection: none
 power:
   sleepPrevention: system
+live:
+  voice: juniper

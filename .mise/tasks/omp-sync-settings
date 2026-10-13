@@ -28,13 +28,23 @@ fi
 
 if [[ "$role" == personal ]]; then
   hindsightApiUrl="$(omp_hindsight_api_url)"
-  expectedApiLine="  apiUrl: $(omp_yaml_double_quote "$hindsightApiUrl")"
+  quotedApiLine="  apiUrl: $(omp_yaml_double_quote "$hindsightApiUrl")"
+  plainApiLine="  apiUrl: $hindsightApiUrl"
 else
-  expectedApiLine='  apiUrl: ""'
+  quotedApiLine='  apiUrl: ""'
+  plainApiLine="$quotedApiLine"
 fi
 
 config="$(<"$liveConfigPath")"
-if [[ "$config" != *$'memory:\n'"  backend: $expectedBackend"* || "$config" != *$'hindsight:\n'"$expectedApiLine"* ]]; then
+# OMP rewrites the config and may drop the renderer's YAML quotes around apiUrl.
+expectedApiLine=''
+for candidateApiLine in "$quotedApiLine" "$plainApiLine"; do
+  if [[ "$config" == *$'hindsight:\n'"$candidateApiLine"$'\n'* || "$config" == *$'hindsight:\n'"$candidateApiLine" ]]; then
+    expectedApiLine="$candidateApiLine"
+    break
+  fi
+done
+if [[ "$config" != *$'memory:\n'"  backend: $expectedBackend"* || -z "$expectedApiLine" ]]; then
   printf '%s\n' 'Live OMP configuration does not match the selected role; refusing to sync.' >&2
   exit 1
 fi
@@ -50,4 +60,10 @@ if [[ "$config" != *"$ompBackendSentinel"* || "$config" != *"$ompHindsightSentin
   exit 1
 fi
 
-omp_atomic_write "$config" "$sourcePath"
+if ! omp_extract_model_roles "$config"; then
+  printf '%s\n' 'Live OMP configuration has no modelRoles block; refusing to sync.' >&2
+  exit 1
+fi
+
+omp_atomic_write "$strippedConfig" "$sourcePath"
+omp_atomic_write "$modelRolesBlock" "$modelRolesPath"

@@ -52,6 +52,8 @@ Put non-secret environment variables needed in every shell in `~/.config/mise/co
 
 Secrets stay in 1Password. Personal OMP uses Hindsight through fnox. Work OMP sets `memory.backend: off` without reading the Hindsight secret.
 
+OMP's `modelRoles` live per role in `templates/omp/model-roles.<role>.yml`. `mise run omp-sync-settings` writes the live `modelRoles` block to the file for this machine's role and leaves the other role untouched.
+
 ## Files
 
 

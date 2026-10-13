@@ -1,0 +1,6 @@
+modelRoles:
+  commit: openai-codex/gpt-6-luna:off
+  default: anthropic/claude-sonnet-5-5:high
+  plan: anthropic/claude-opus-5-5:xhigh
+  slow: anthropic/claude-opus-5-5:xhigh
+  smol: anthropic/claude-haiku-5-5:high
