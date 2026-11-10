@@ -6,6 +6,7 @@
 minimum_release_age = "7d"
 
 [tool_alias]
+agent-desktop = "github:vercel-labs/agent-desktop"
 fish = "aqua:fish-shell/fish-shell"
 git = "conda:git"
 markitdown = "pipx:markitdown"
@@ -16,6 +17,7 @@ pi-coding-agent = "npm:@earendil-works/pi-coding-agent"
 [tools]
 1password-cli = "latest"
 agent-browser = "latest"
+agent-desktop = "latest"
 atuin = "latest"
 bat = "latest"
 delta = "latest"
