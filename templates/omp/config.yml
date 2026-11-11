@@ -18,7 +18,6 @@ disabledExtensions:
 interruptMode: immediate
 memories:
   enabled: true
-__OMP_MODEL_ROLES__
 renderMermaid:
   enabled: true
 secrets:
@@ -32,9 +31,6 @@ task:
 theme:
   dark: everforest-dark
   light: everforest-light
-memory:
-  backend: __OMP_MEMORY_BACKEND__
-setupVersion: 2
 symbolPreset: nerd
 statusLine:
   preset: default
@@ -56,7 +52,6 @@ tts:
 todo:
   eager: default
 hindsight:
-  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__
   bankId: Code
   scoping: per-project-tagged
 magicKeywords:

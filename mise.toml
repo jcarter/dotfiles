@@ -35,9 +35,10 @@ adopt = true
 "~/.config/mise/miserc.toml" = { source = "home/.config/mise/miserc.toml", mode = "symlink" }
 "~/.config/yazi" = { source = "home/.config/yazi", mode = "symlink-each" }
 "~/.omp/agent/themes" = { source = "home/.omp/agent/themes", mode = "symlink-each" }
+"~/.omp/agent/config.yml/shared" = { source = "templates/omp/config.yml", merge = true, permissions = "0600" }
+"~/.omp/agent/config.yml/role" = { source = "templates/omp/role.yml.tera", template = "tera", merge = true }
+"~/.omp/agent/config.yml/hindsight" = { source = "templates/omp/hindsight.yml.tera", template = "tera", merge = true }
 "~/.local/bin/delta-everforest" = { source = "home/.local/bin/delta-everforest", mode = "symlink" }
-"~/.local/bin/omp-render-settings" = { source = ".mise/tasks/omp-render-settings", mode = "symlink" }
-"~/.local/bin/omp-sync-settings" = { source = ".mise/tasks/omp-sync-settings", mode = "symlink" }
 
 [tasks.bootstrap]
 description = "Run idempotent post-bootstrap setup"
@@ -46,5 +47,5 @@ run = [
   { task = "setup-login-shell" },
   { task = "fisher-sync" },
   { task = "generate-completions" },
-  { task = "omp-render-settings" },
+  { task = "omp-hindsight" },
 ]

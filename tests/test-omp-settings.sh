@@ -2,186 +2,143 @@
 
 set -euo pipefail
 
-repoRoot="$(cd "$(dirname "$0")/.." && pwd)"
-temporaryDir="$(mktemp -d)"
-trap 'rm -rf "$temporaryDir"' EXIT
+repo_root="$(cd "$(dirname "$0")/.." && pwd)"
+temporary_dir="$(mktemp -d)"
+trap 'rm -rf "$temporary_dir"' EXIT
 
-# Keep inherited machine settings from redirecting fixture operations outside
-# this temporary environment.
-unset HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME OMP_TEMPLATE_PATH \
-  OMP_CONFIG_PATH FNOX_CONFIG_PATH FNOX_BIN DOTFILES_REPO_ROOT DOTFILES_ROLE
+test_repo="$temporary_dir/repo"
+test_home="$temporary_dir/home"
+live_config="$test_home/.omp/agent/config.yml"
+saved_config="$temporary_dir/saved.yml"
+fnox_log="$temporary_dir/fnox.log"
+fnox_value="$temporary_dir/fnox.value"
+protected_value='https://hindsight.example/api?scope=prod*&set=[one]'
 
 fail() {
-  printf 'FAIL: %s\n' "$1" >&2
-  exit 1
+    printf 'FAIL: %s\n' "$1" >&2
+    exit 1
 }
 
-assertContains() {
-  local needle="$1"
-  local file="$2"
-  grep -Fqx "$needle" "$file" >/dev/null || fail "missing $needle"
+expect_failure() {
+    if "$@" >/dev/null 2>&1; then
+        fail "expected failure: $*"
+    fi
 }
 
-assertNotContains() {
-  local needle="$1"
-  local file="$2"
-  if grep -Fq "$needle" "$file"; then
-    fail "unexpected protected value"
-  fi
+assert_line() {
+    grep -Fqx -- "$1" "$live_config" || fail "live config lacks line: $1"
 }
 
-mkdir -p "$temporaryDir/source/templates/omp" "$temporaryDir/live/agent" "$temporaryDir/bin"
-export HOME="$temporaryDir/home"
-export XDG_CONFIG_HOME="$temporaryDir/home/.config"
-export XDG_DATA_HOME="$temporaryDir/home/.local/share"
-export XDG_STATE_HOME="$temporaryDir/home/.local/state"
-cp "$repoRoot/templates/omp/config.yml" "$temporaryDir/source/templates/omp/config.yml"
-printf '%s\n' 'modelRoles:' '  default: personal/model' > "$temporaryDir/source/templates/omp/model-roles.personal.yml"
-printf '%s\n' 'modelRoles:' '  default: work/model' > "$temporaryDir/source/templates/omp/model-roles.work.yml"
-protectedValue='https://hindsight.example/api?scope=prod*&set=[one]'
+assert_no_secret() {
+    ! grep -Fq -- "$protected_value" "$1" || fail "protected value leaked into ${1##*/}"
+}
 
-cat > "$temporaryDir/bin/fnox" <<'EOF'
+# Run real mise against the fixture with nothing inherited from this machine.
+run_mise() {
+    env -i \
+        HOME="$test_home" \
+        PATH="$temporary_dir/bin:$PATH" \
+        MISE_CACHE_DIR="$temporary_dir/cache" \
+        MISE_CONFIG_DIR="$temporary_dir/config" \
+        MISE_DATA_DIR="$temporary_dir/data" \
+        MISE_STATE_DIR="$temporary_dir/state" \
+        MISE_TRUSTED_CONFIG_PATHS="$test_repo" \
+        FNOX_LOG="$fnox_log" \
+        FNOX_VALUE="$fnox_value" \
+        mise -C "$test_repo" "$@"
+}
+
+set_role() {
+    printf '%s\n' '[env]' "DOTFILES_ROLE = \"$1\"" > "$test_repo/mise.local.toml"
+}
+
+apply_config() {
+    run_mise bootstrap dotfiles apply --yes "$live_config"
+}
+
+config_drifted() {
+    ! run_mise dot status --missing "$live_config" >/dev/null 2>&1
+}
+
+mkdir -p "$test_repo/.mise" "$temporary_dir/bin"
+cp "$repo_root/mise.toml" "$test_repo/"
+cp -R "$repo_root/templates" "$test_repo/"
+cp -R "$repo_root/.mise/tasks" "$test_repo/.mise/"
+
+# The fnox stub records each read; a missing value file is a failed read.
+cat > "$temporary_dir/bin/fnox" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-[[ "$1" == '--config' && "$3" == 'get' && "$4" == 'OMP_HINDSIGHT_API_URL' ]]
-printf '%s' 'https://hindsight.example/api?scope=prod*&set=[one]'
+printf '%s\n' "$*" >> "$FNOX_LOG"
+[[ "$1" == --config && "$3" == get && "$4" == OMP_HINDSIGHT_API_URL ]]
+cat "$FNOX_VALUE"
 EOF
-chmod 700 "$temporaryDir/bin/fnox"
-cp "$temporaryDir/bin/fnox" "$temporaryDir/bin/fnox with spaces"
-chmod 700 "$temporaryDir/bin/fnox with spaces"
+chmod 700 "$temporary_dir/bin/fnox"
 
-DOTFILES_ROLE=personal \
-  DOTFILES_REPO_ROOT="$temporaryDir/source" \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
-  FNOX_CONFIG_PATH="$temporaryDir/fnox.toml" \
-  FNOX_BIN="$temporaryDir/bin/fnox with spaces" \
-  "$repoRoot/.mise/tasks/omp-render-settings" > "$temporaryDir/personal.out"
+# Personal: the dotfiles step creates a private config without reading the secret.
+set_role personal
+apply_config > "$temporary_dir/personal.out" 2>&1
+assert_line '  backend: hindsight'
+[[ "$(stat -f '%Lp' "$live_config")" == 600 ]] || fail 'live config is not mode 0600'
+! config_drifted || fail 'apply left declared keys drifted'
+[[ ! -e "$fnox_log" ]] || fail 'dotfiles step read the secret'
 
-assertContains '  backend: hindsight' "$temporaryDir/live/agent/config.yml"
-assertContains "  apiUrl: \"$protectedValue\"" "$temporaryDir/live/agent/config.yml"
-assertNotContains "$protectedValue" "$temporaryDir/personal.out"
-[[ "$(stat -f '%Lp' "$temporaryDir/live/agent/config.yml")" == '600' ]] || fail 'live config is not mode 0600'
-assertContains '  default: personal/model' "$temporaryDir/live/agent/config.yml"
+# OMP keeps its own keys, including this Mac's models; declared-key drift is corrected.
+printf '%s\n' '# written by omp' 'setupVersion: 2' 'modelRoles:' '  default: machine/model' >> "$live_config"
+sed -i '' 's/backend: hindsight/backend: off/' "$live_config"
+config_drifted || fail 'declared-key drift was not detected'
+apply_config >> "$temporary_dir/personal.out" 2>&1
+assert_line '  backend: hindsight'
+assert_line '# written by omp'
+assert_line 'setupVersion: 2'
+assert_line '  default: machine/model'
+! config_drifted || fail 'apply did not correct declared-key drift'
+cp "$live_config" "$saved_config"
+apply_config >> "$temporary_dir/personal.out" 2>&1
+cmp -s "$saved_config" "$live_config" || fail 'reapply changed a converged config'
 
-# Simulate an OMP-authored non-secret setting, then ensure sync keeps only the
-# renderer sentinels in the committed source.
-sed -i '' 's/mode: prompt/mode: interactive/' "$temporaryDir/live/agent/config.yml"
-sed -i '' 's|personal/model|personal/edited|' "$temporaryDir/live/agent/config.yml"
-DOTFILES_ROLE=personal \
-  DOTFILES_REPO_ROOT="$temporaryDir/source" \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
-  FNOX_CONFIG_PATH="$temporaryDir/fnox.toml" \
-  FNOX_BIN="$temporaryDir/bin/fnox with spaces" \
-  "$repoRoot/.mise/tasks/omp-sync-settings" > "$temporaryDir/sync.out"
+# The post-tools task sets the URL without printing it and refreshes a stale one.
+printf '%s' "$protected_value" > "$fnox_value"
+run_mise run omp-hindsight >> "$temporary_dir/personal.out" 2>&1
+assert_line "  apiUrl: \"$protected_value\""
+sed -i '' 's|apiUrl: .*|apiUrl: "https://stale.example"|' "$live_config"
+! config_drifted || fail 'status reported the secret-backed key'
+run_mise run omp-hindsight >> "$temporary_dir/personal.out" 2>&1
+assert_line "  apiUrl: \"$protected_value\""
+assert_line 'setupVersion: 2'
+assert_no_secret "$temporary_dir/personal.out"
+[[ "$(wc -l < "$fnox_log")" -eq 2 ]] || fail 'the secret was read outside the task'
 
-assertContains '  backend: __OMP_MEMORY_BACKEND__' "$temporaryDir/source/templates/omp/config.yml"
-assertContains '  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__' "$temporaryDir/source/templates/omp/config.yml"
-assertContains '  mode: interactive' "$temporaryDir/source/templates/omp/config.yml"
-assertContains '  bankId: Code' "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains "$protectedValue" "$temporaryDir/sync.out"
-assertContains '  default: personal/edited' "$temporaryDir/source/templates/omp/model-roles.personal.yml"
-assertContains '  default: work/model' "$temporaryDir/source/templates/omp/model-roles.work.yml"
-assertNotContains 'modelRoles' "$temporaryDir/source/templates/omp/config.yml"
+# An empty or failed secret read leaves the config untouched.
+cp "$live_config" "$saved_config"
+: > "$fnox_value"
+expect_failure run_mise run omp-hindsight
+rm "$fnox_value"
+expect_failure run_mise run omp-hindsight
+cmp -s "$saved_config" "$live_config" || fail 'failed secret read changed the live config'
 
-# OMP may rewrite apiUrl without the renderer's YAML quotes; sync must still restore the sentinel.
-liveConfig="$(<"$temporaryDir/live/agent/config.yml")"
-quotedLine="  apiUrl: \"$protectedValue\""
-shopt -u patsub_replacement 2>/dev/null || true
-printf '%s\n' "${liveConfig//"$quotedLine"/  apiUrl: $protectedValue}" > "$temporaryDir/live/agent/config.yml"
-DOTFILES_ROLE=personal \
-  DOTFILES_REPO_ROOT="$temporaryDir/source" \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
-  FNOX_CONFIG_PATH="$temporaryDir/fnox.toml" \
-  FNOX_BIN="$temporaryDir/bin/fnox with spaces" \
-  "$repoRoot/.mise/tasks/omp-sync-settings" > "$temporaryDir/unquoted-sync.out"
-assertContains '  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__' "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
+# Work: its own keys on a fresh home, and the secret is never read or written.
+rm -rf "$test_home" "$fnox_log"
+printf '%s' "$protected_value" > "$fnox_value"
+set_role work
+apply_config > "$temporary_dir/work.out" 2>&1
+run_mise run omp-hindsight >> "$temporary_dir/work.out" 2>&1
+assert_line '  backend: off'
+! config_drifted || fail 'work apply left declared keys drifted'
+[[ ! -e "$fnox_log" ]] || fail 'work role read the secret'
+! grep -Fq 'apiUrl' "$live_config" || fail 'work config has a Hindsight URL'
+assert_no_secret "$live_config"
+assert_no_secret "$temporary_dir/work.out"
 
-DOTFILES_ROLE=work \
-  DOTFILES_REPO_ROOT="$temporaryDir/source" \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
-  FNOX_BIN="$temporaryDir/bin/not-called" \
-  "$repoRoot/.mise/tasks/omp-render-settings" > "$temporaryDir/work.out"
+# An unknown or missing role fails loudly and leaves the config untouched.
+cp "$live_config" "$saved_config"
+set_role other
+if role_error="$(apply_config 2>&1)"; then
+    fail 'unknown role was accepted'
+fi
+grep -Fq 'DOTFILES_ROLE' <<<"$role_error" || fail 'unknown role error does not name DOTFILES_ROLE'
+rm "$test_repo/mise.local.toml"
+expect_failure apply_config
+cmp -s "$saved_config" "$live_config" || fail 'invalid role changed the live config'
 
-assertContains '  backend: off' "$temporaryDir/live/agent/config.yml"
-assertContains '  apiUrl: ""' "$temporaryDir/live/agent/config.yml"
-assertNotContains "$protectedValue" "$temporaryDir/work.out"
-assertContains '  default: work/model' "$temporaryDir/live/agent/config.yml"
-
-# Installed commands are symlinks. They must still locate the repository when
-# called directly outside a mise task.
-ln -s "$repoRoot/.mise/tasks/omp-render-settings" "$temporaryDir/bin/omp-render-settings"
-DOTFILES_ROLE=work \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/from-symlink.yml" \
-  FNOX_BIN="$temporaryDir/bin/not-called" \
-  "$temporaryDir/bin/omp-render-settings" > "$temporaryDir/symlink.out"
-assertContains '  backend: off' "$temporaryDir/live/agent/from-symlink.yml"
-assertContains '  apiUrl: ""' "$temporaryDir/live/agent/from-symlink.yml"
-
-DOTFILES_ROLE=work \
-  DOTFILES_REPO_ROOT="$temporaryDir/source" \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
-  FNOX_BIN="$temporaryDir/bin/not-called" \
-  "$repoRoot/.mise/tasks/omp-sync-settings" > "$temporaryDir/work-sync.out"
-
-assertContains '  backend: __OMP_MEMORY_BACKEND__' "$temporaryDir/source/templates/omp/config.yml"
-assertContains '  apiUrl: __FNOX_OMP_HINDSIGHT_API_URL__' "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains "$protectedValue" "$temporaryDir/source/templates/omp/config.yml"
-assertNotContains "$protectedValue" "$temporaryDir/work-sync.out"
-assertContains '  default: work/model' "$temporaryDir/source/templates/omp/model-roles.work.yml"
-assertContains '  default: personal/edited' "$temporaryDir/source/templates/omp/model-roles.personal.yml"
-assertNotContains 'modelRoles' "$temporaryDir/source/templates/omp/config.yml"
-
-expectFailure() {
-  if "$@" >/dev/null 2>&1; then
-    fail "expected command to fail: $1"
-  fi
-}
-
-# Invalid roles, incomplete templates, fnox failures/empty values, and role
-# mismatches must leave their existing destination untouched.
-cp "$temporaryDir/live/agent/config.yml" "$temporaryDir/before-failure-live.yml"
-expectFailure env DOTFILES_ROLE=other OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
-  FNOX_BIN="$temporaryDir/bin/not-called" "$repoRoot/.mise/tasks/omp-render-settings"
-cmp -s "$temporaryDir/before-failure-live.yml" "$temporaryDir/live/agent/config.yml" || fail 'invalid role changed live config'
-
-# A role without a model-roles file must not touch the live config.
-mkdir "$temporaryDir/no-roles"
-cp "$temporaryDir/source/templates/omp/config.yml" "$temporaryDir/no-roles/config.yml"
-expectFailure env DOTFILES_ROLE=work OMP_TEMPLATE_PATH="$temporaryDir/no-roles/config.yml" \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" FNOX_BIN="$temporaryDir/bin/not-called" \
-  "$repoRoot/.mise/tasks/omp-render-settings"
-cmp -s "$temporaryDir/before-failure-live.yml" "$temporaryDir/live/agent/config.yml" || fail 'missing model roles changed live config'
-
-cp "$temporaryDir/source/templates/omp/config.yml" "$temporaryDir/source/missing-sentinel.yml"
-sed -i '' 's/__OMP_MEMORY_BACKEND__/removed/' "$temporaryDir/source/missing-sentinel.yml"
-cp "$temporaryDir/live/agent/config.yml" "$temporaryDir/before-missing-sentinel-live.yml"
-expectFailure env DOTFILES_ROLE=work OMP_TEMPLATE_PATH="$temporaryDir/source/missing-sentinel.yml" \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" FNOX_BIN="$temporaryDir/bin/not-called" \
-  "$repoRoot/.mise/tasks/omp-render-settings"
-cmp -s "$temporaryDir/before-missing-sentinel-live.yml" "$temporaryDir/live/agent/config.yml" || fail 'missing sentinel changed live config'
-
-cat > "$temporaryDir/bin/fnox-failed" <<'EOF'
-#!/usr/bin/env bash
-exit 7
-EOF
-cat > "$temporaryDir/bin/fnox-empty" <<'EOF'
-#!/usr/bin/env bash
-exit 0
-EOF
-chmod 700 "$temporaryDir/bin/fnox-failed" "$temporaryDir/bin/fnox-empty"
-for fnoxFailure in fnox-failed fnox-empty; do
-  cp "$temporaryDir/live/agent/config.yml" "$temporaryDir/before-$fnoxFailure-live.yml"
-  expectFailure env DOTFILES_ROLE=personal OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" \
-    FNOX_BIN="$temporaryDir/bin/$fnoxFailure" "$repoRoot/.mise/tasks/omp-render-settings"
-  cmp -s "$temporaryDir/before-$fnoxFailure-live.yml" "$temporaryDir/live/agent/config.yml" || fail "$fnoxFailure changed live config"
-done
-
-sed -i '' 's/backend: off/backend: hindsight/' "$temporaryDir/live/agent/config.yml"
-cp "$temporaryDir/source/templates/omp/config.yml" "$temporaryDir/before-role-mismatch-source.yml"
-expectFailure env DOTFILES_ROLE=work DOTFILES_REPO_ROOT="$temporaryDir/source" \
-  OMP_CONFIG_PATH="$temporaryDir/live/agent/config.yml" FNOX_BIN="$temporaryDir/bin/not-called" \
-  "$repoRoot/.mise/tasks/omp-sync-settings"
-cmp -s "$temporaryDir/before-role-mismatch-source.yml" "$temporaryDir/source/templates/omp/config.yml" || fail 'role mismatch changed source template'
-printf '%s\n' 'OMP renderer and sync tests passed.'
+printf '%s\n' 'OMP merge tests passed.'

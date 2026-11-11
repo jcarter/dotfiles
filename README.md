@@ -37,22 +37,30 @@ Run commands from `~/Source/dotfiles`:
 | `mise run sync`                                | Pull the checkout and apply its configuration, installing missing apps without upgrading |
 | `mise run update`                              | Upgrade mise, mise tools, and apps, then apply the configuration                         |
 | `mise run check`                               | Report Git, app, and mise state                                                          |
-| `mise run omp-render-settings`                 | Rebuild the live OMP config                                                              |
-| `mise run omp-sync-settings`                   | Save non-secret OMP changes                                                              |
+| `mise run omp-hindsight`                       | Refresh the personal OMP Hindsight URL from 1Password                                    |
 
 
 ## Per-computer settings
 
 The installer creates two untracked files:
 
-- `mise.local.toml` holds `DOTFILES_ROLE` for this repository's tasks.
+- `mise.local.toml` holds `DOTFILES_ROLE` for this repository's tasks and OMP settings.
 - `~/.config/git/config.local` holds Git name and email.
 
 Put non-secret environment variables needed in every shell in `~/.config/mise/config.local.toml`. It is loaded globally and remains untracked.
 
 Secrets stay in 1Password. Personal OMP uses Hindsight through fnox. Work OMP sets `memory.backend: off` without reading the Hindsight secret.
 
-OMP's `modelRoles` live per role in `templates/omp/model-roles.<role>.yml`. `mise run omp-sync-settings` writes the live `modelRoles` block to the file for this machine's role and leaves the other role untouched.
+## OMP settings
+
+mise merges only the keys this repository declares into `~/.omp/agent/config.yml`. OMP owns every other key, and its own changes survive `mise run sync`.
+
+- `templates/omp/config.yml` holds the keys shared by every Mac.
+- `templates/omp/role.yml.tera` holds `memory.backend` for each role.
+- `modelRoles` is not tracked; each Mac chooses its own models in OMP.
+- `mise run omp-hindsight` sets the personal `hindsight.apiUrl`; bootstrap runs it after tools are installed, so `mise run sync` also picks up a changed URL.
+
+To keep an OMP setting, edit the tracked source and commit it; nothing copies live changes back. `mise dot status --missing ~/.omp/agent/config.yml` reports when a declared key drifted. Deleting a key from a source stops managing it but leaves it in the live file.
 
 ## Files
 
@@ -65,4 +73,4 @@ OMP's `modelRoles` live per role in `templates/omp/model-roles.<role>.yml`. `mis
 | `home/.config/mise/config.macos-x64.toml` | Intel fallbacks                                                      |
 | `mise.toml`                               | Dotfile mappings, apps (`[bootstrap.packages]`), and bootstrap order |
 | `.mise/tasks/`                            | Tasks for this repository                                            |
-| `templates/`                              | Generated-config sources                                             |
+| `templates/`                              | Merge sources for the live OMP config                                |
