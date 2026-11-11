@@ -1,0 +1,12 @@
+{#- Role-owned OMP keys; the role is DOTFILES_ROLE in the untracked mise.local.toml. -#}
+{%- set local = read_toml(path="mise.local.toml") -%}
+{%- set role = local.env.DOTFILES_ROLE -%}
+{%- if role == "personal" -%}
+memory:
+  backend: hindsight
+{%- elif role == "work" -%}
+memory:
+  backend: off
+{%- else -%}
+{{ throw(message="DOTFILES_ROLE in mise.local.toml must be personal or work, not " ~ role) }}
+{%- endif %}

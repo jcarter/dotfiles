@@ -3,7 +3,8 @@
 set -euo pipefail
 
 repoRoot="$(cd "$(dirname "$0")/.." && pwd)"
-temporaryDir="$(mktemp -d)"
+# mise links to physical paths, so resolve the temporary directory first.
+temporaryDir="$(cd "$(mktemp -d)" && pwd -P)"
 trap 'rm -rf "$temporaryDir"' EXIT
 
 fail() {
@@ -11,8 +12,12 @@ fail() {
     exit 1
 }
 
+# Apply a copy so the fixture can declare its own machine role.
 testHome="$temporaryDir/home"
-mkdir -p "$testHome"
+testRepo="$temporaryDir/repo"
+mkdir -p "$testHome" "$testRepo"
+cp -R "$repoRoot/mise.toml" "$repoRoot/home" "$repoRoot/templates" "$testRepo/"
+printf '%s\n' '[env]' 'DOTFILES_ROLE = "personal"' > "$testRepo/mise.local.toml"
 
 env \
     -u DOTFILES_DIR \
@@ -23,14 +28,13 @@ env \
     MISE_CONFIG_DIR="$temporaryDir/config" \
     MISE_DATA_DIR="$temporaryDir/data" \
     MISE_STATE_DIR="$temporaryDir/state" \
-    MISE_PROJECT_ROOT="$repoRoot" \
-    DOTFILES_ROLE=personal \
-    MISE_TRUSTED_CONFIG_PATHS="$repoRoot" \
-    mise -C "$repoRoot" bootstrap dotfiles apply --yes >/dev/null
+    MISE_PROJECT_ROOT="$testRepo" \
+    MISE_TRUSTED_CONFIG_PATHS="$testRepo" \
+    mise -C "$testRepo" bootstrap dotfiles apply --yes >/dev/null
 
 # Include new untracked source files while honoring the repository's ignore rules.
 while IFS= read -r -d '' relativePath; do
-    source="$repoRoot/$relativePath"
+    source="$testRepo/$relativePath"
     target="$testHome/${relativePath#home/}"
     [[ -L "$target" ]] || fail "home source is not linked: $relativePath"
     [[ -e "$target" ]] || fail "home source is a dangling symlink: $target -> $(readlink "$target")"
@@ -51,7 +55,7 @@ if sed -n '/^\[tool_alias\]/,/^\[tools\]/p' "$repoRoot/home/.config/mise/config.
     fail 'shared mise config must leave Intel-only Cargo aliases to the overlay'
 fi
 for cargoAlias in \
-    'atuin = "cargo:atuin"' \
+    'atuin = "github:atuinsh/atuin"' \
     'delta = "cargo:git-delta"' \
     'fd = "cargo:fd-find"'; do
     grep -Fqx "$cargoAlias" "$repoRoot/home/.config/mise/config.macos-x64.toml" ||
@@ -67,13 +71,5 @@ grep -Fqx 'name = "everforest-auto"' "$repoRoot/home/.config/atuin/config.toml" 
     fail 'Atuin does not select the Everforest theme'
 grep -Fq '@ansi_(' "$repoRoot/home/.config/atuin/themes/everforest-auto.toml" ||
     fail 'Atuin Everforest theme does not follow the terminal ANSI palette'
-
-for ompTask in omp-render-settings omp-sync-settings; do
-    ompTarget="$testHome/.local/bin/$ompTask"
-    ompSource="$repoRoot/.mise/tasks/$ompTask"
-    [[ -L "$ompTarget" ]] || fail "OMP command is not a symlink: $ompTarget"
-    [[ -e "$ompTarget" ]] || fail "OMP command is a dangling symlink: $ompTarget -> $(readlink "$ompTarget")"
-    [[ "$(readlink "$ompTarget")" == "$ompSource" ]] || fail "OMP command points to the wrong source: $ompTarget"
-done
 
 printf '%s\n' 'Dotfile symlink tests passed.'

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#MISE description="Set the personal OMP Hindsight URL from 1Password"
+set -euo pipefail
+
+# Only the personal role reads the secret.
+[[ "$DOTFILES_ROLE" == personal ]] || exit 0
+
+OMP_HINDSIGHT_API_URL="$(fnox --config "$HOME/.config/fnox/config.toml" get OMP_HINDSIGHT_API_URL)"
+if [[ -z "$OMP_HINDSIGHT_API_URL" ]]; then
+    printf '%s\n' 'fnox returned an empty OMP_HINDSIGHT_API_URL.' >&2
+    exit 1
+fi
+
+export OMP_HINDSIGHT_API_URL
+export PATH="$HOME/.local/bin:$PATH"
+mise dot apply --yes "$HOME/.omp/agent/config.yml"

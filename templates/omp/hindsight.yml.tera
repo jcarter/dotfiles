@@ -1,0 +1,5 @@
+{#- Owns nothing until the omp-hindsight task supplies the URL, so status never reads the secret. -#}
+{%- if env.OMP_HINDSIGHT_API_URL is defined -%}
+hindsight:
+  apiUrl: {{ env.OMP_HINDSIGHT_API_URL | json_encode }}
+{%- endif %}
