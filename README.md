@@ -38,7 +38,7 @@ Run commands from `~/Source/dotfiles`:
 | `mise run update`                              | Upgrade mise, mise tools, and apps, then apply the configuration                         |
 | `mise run check`                               | Report Git, app, and mise state                                                          |
 | `mise run omp-hindsight`                       | Refresh the personal OMP Hindsight URL from 1Password                                    |
-| `mise run omp-sync-settings`                   | Copy live values of the shared OMP keys back to `templates/omp/config.yml`               |
+| `mise run omp-sync-settings`                   | Copy live OMP settings, except the ignore list, to `templates/omp/config.yml`            |
 
 
 ## Per-computer settings
@@ -58,16 +58,16 @@ mise merges only the keys this repository declares into `~/.omp/agent/config.yml
 
 - `templates/omp/config.yml` holds the keys shared by every Mac.
 - `templates/omp/role.yml.tera` holds `memory.backend` for each role.
-- `modelRoles` is not tracked; each Mac chooses its own models in OMP.
+- `templates/omp/sync-ignore.txt` lists the key paths sync-back never copies: each Mac's models (`modelRoles`, `task.agentModelOverrides`), role keys, OMP's `setupVersion`, and secrets.
 - `mise run omp-hindsight` sets the personal `hindsight.apiUrl`; bootstrap runs it after tools are installed, so `mise run sync` also picks up a changed URL.
 
-To keep a shared OMP setting changed in OMP:
+To keep OMP settings changed in OMP:
 
-- Change it in OMP.
-- Run `mise run omp-sync-settings`; it copies the live value of every key in `templates/omp/config.yml` and nothing else, so `modelRoles`, `memory`, `hindsight.apiUrl`, and keys absent from the template stay out of Git.
+- Change them in OMP.
+- Run `mise run omp-sync-settings`; it writes the whole live config, minus the ignored paths, to `templates/omp/config.yml`. It refuses to write `hindsight.apiUrl` even if the ignore list stops listing it.
 - Review `git diff templates/omp/config.yml`, then commit and push.
 
-Sync back before `mise run sync`, which reapplies the tracked values. To share a new key, add it to `templates/omp/config.yml` by hand first. `mise dot status --missing ~/.omp/agent/config.yml` reports when a declared key drifted. Deleting a key from a source stops managing it but leaves it in the live file.
+Sync back before `mise run sync`, which reapplies the tracked values. Every synced key, including one OMP added on its own, becomes tracked and is applied to every Mac on its next sync. To keep a setting per-Mac, add its key path to `templates/omp/sync-ignore.txt` (one dot-separated path per line, `#` comments allowed); the next sync-back drops it from `templates/omp/config.yml`. `mise dot status --missing ~/.omp/agent/config.yml` reports when a declared key drifted. Deleting a key from a source stops managing it but leaves it in the live file.
 
 ## Files
 

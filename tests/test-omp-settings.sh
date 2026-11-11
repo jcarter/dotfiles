@@ -114,13 +114,14 @@ assert_line 'setupVersion: 2'
 assert_no_secret "$temporary_dir/personal.out"
 [[ "$(wc -l < "$fnox_log")" -eq 2 ]] || fail 'the secret was read outside the task'
 
-# Sync-back copies only live values of shared keys, never models, unknown keys, role keys, or the secret.
-printf '%s\n' 'unknownKey: local-only' >> "$live_config"
+# Sync-back mirrors every live key except the ignore list, so OMP-added keys are shared and models, role keys, and the secret are not.
+omp_added=('unknownKey: omp-added' 'tui:' '  vimMode: true')
+printf '%s\n' "${omp_added[@]}" >> "$live_config"
 sed -i '' 's/bankId: Code/bankId: Synced/' "$live_config"
 run_mise run omp-sync-settings > "$temporary_dir/sync.out" 2>&1 || fail 'sync-back failed'
-diff -u <(sed 's/bankId: Code/bankId: Synced/' "$repo_root/templates/omp/config.yml") "$shared_source" >&2 \
-    || fail 'sync-back changed more than the edited shared key'
-! grep -Eq '^(modelRoles|unknownKey|memory|setupVersion):' "$shared_source" || fail 'sync-back wrote a key absent from the template'
+diff -u <(sed 's/bankId: Code/bankId: Synced/' "$repo_root/templates/omp/config.yml"; printf '%s\n' "${omp_added[@]}") "$shared_source" >&2 \
+    || fail 'sync-back did not mirror the live config'
+! grep -Eq '^(modelRoles|memory|setupVersion):' "$shared_source" || fail 'sync-back wrote an ignored key'
 ! grep -Fq 'apiUrl' "$shared_source" || fail 'sync-back wrote the Hindsight URL'
 assert_no_secret "$shared_source"
 assert_no_secret "$temporary_dir/sync.out"
@@ -129,6 +130,24 @@ cp "$live_config" "$saved_config"
 apply_config >> "$temporary_dir/personal.out" 2>&1
 ! config_drifted || fail 'apply after sync-back reported drift'
 cmp -s "$saved_config" "$live_config" || fail 'apply after sync-back changed the live config'
+
+# A path added to the ignore list stays out of the template.
+ignore_list="$test_repo/templates/omp/sync-ignore.txt"
+printf '%s\n' 'tui.vimMode  # this Mac only' >> "$ignore_list"
+run_mise run omp-sync-settings > "$temporary_dir/sync.out" 2>&1 || fail 'sync-back with an extended ignore list failed'
+! grep -Fq 'vimMode' "$shared_source" || fail 'sync-back wrote a newly ignored key'
+grep -Fqx 'unknownKey: omp-added' "$shared_source" || fail 'extended ignore list dropped another key'
+
+# Dropping the URL from the ignore list still never writes or prints it.
+cp "$shared_source" "$saved_config"
+sed -i '' '/^hindsight\.apiUrl$/d' "$ignore_list"
+if sync_error="$(run_mise run omp-sync-settings 2>&1)"; then
+    fail 'sync-back wrote the Hindsight URL once unlisted'
+fi
+grep -Fq 'hindsight.apiUrl' <<<"$sync_error" || fail 'unlisted Hindsight URL error is unclear'
+! grep -Fq -- "$protected_value" <<<"$sync_error" || fail 'refused sync-back printed the secret'
+cmp -s "$saved_config" "$shared_source" || fail 'refused sync-back changed the shared source'
+cp "$repo_root/templates/omp/sync-ignore.txt" "$ignore_list"
 
 # An empty or failed secret read leaves the config untouched.
 cp "$live_config" "$saved_config"
