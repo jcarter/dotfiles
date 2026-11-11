@@ -60,10 +60,15 @@ config_drifted() {
     ! run_mise dot status --missing "$live_config" >/dev/null 2>&1
 }
 
-mkdir -p "$test_repo/.mise" "$temporary_dir/bin"
+mkdir -p "$test_repo/.mise" "$test_home" "$temporary_dir/bin" "$temporary_dir/config"
 cp "$repo_root/mise.toml" "$test_repo/"
 cp -R "$repo_root/templates" "$test_repo/"
 cp -R "$repo_root/.mise/tasks" "$test_repo/.mise/"
+shared_source="$test_repo/templates/omp/config.yml"
+
+# The sync-back task uses yq from the global mise config.
+grep -E '^(\[tools\]|yq = )' "$repo_root/home/.config/mise/config.toml" > "$temporary_dir/config/config.toml"
+run_mise install yq >/dev/null 2>&1 || fail 'could not install yq into the sandbox'
 
 # The fnox stub records each read; a missing value file is a failed read.
 cat > "$temporary_dir/bin/fnox" <<'EOF'
@@ -109,6 +114,22 @@ assert_line 'setupVersion: 2'
 assert_no_secret "$temporary_dir/personal.out"
 [[ "$(wc -l < "$fnox_log")" -eq 2 ]] || fail 'the secret was read outside the task'
 
+# Sync-back copies only live values of shared keys, never models, unknown keys, role keys, or the secret.
+printf '%s\n' 'unknownKey: local-only' >> "$live_config"
+sed -i '' 's/bankId: Code/bankId: Synced/' "$live_config"
+run_mise run omp-sync-settings > "$temporary_dir/sync.out" 2>&1 || fail 'sync-back failed'
+diff -u <(sed 's/bankId: Code/bankId: Synced/' "$repo_root/templates/omp/config.yml") "$shared_source" >&2 \
+    || fail 'sync-back changed more than the edited shared key'
+! grep -Eq '^(modelRoles|unknownKey|memory|setupVersion):' "$shared_source" || fail 'sync-back wrote a key absent from the template'
+! grep -Fq 'apiUrl' "$shared_source" || fail 'sync-back wrote the Hindsight URL'
+assert_no_secret "$shared_source"
+assert_no_secret "$temporary_dir/sync.out"
+[[ "$(wc -l < "$fnox_log")" -eq 2 ]] || fail 'sync-back read the secret'
+cp "$live_config" "$saved_config"
+apply_config >> "$temporary_dir/personal.out" 2>&1
+! config_drifted || fail 'apply after sync-back reported drift'
+cmp -s "$saved_config" "$live_config" || fail 'apply after sync-back changed the live config'
+
 # An empty or failed secret read leaves the config untouched.
 cp "$live_config" "$saved_config"
 : > "$fnox_value"
@@ -119,8 +140,18 @@ cmp -s "$saved_config" "$live_config" || fail 'failed secret read changed the li
 
 # Work: its own keys on a fresh home, and the secret is never read or written.
 rm -rf "$test_home" "$fnox_log"
+mkdir "$test_home"
 printf '%s' "$protected_value" > "$fnox_value"
 set_role work
+
+# Sync-back without a live config fails clearly and leaves the source untouched.
+cp "$shared_source" "$saved_config"
+if sync_error="$(run_mise run omp-sync-settings 2>&1)"; then
+    fail 'sync-back without a live config succeeded'
+fi
+grep -Fq 'No live OMP config' <<<"$sync_error" || fail 'missing live config error is unclear'
+cmp -s "$saved_config" "$shared_source" || fail 'failed sync-back changed the shared source'
+
 apply_config > "$temporary_dir/work.out" 2>&1
 run_mise run omp-hindsight >> "$temporary_dir/work.out" 2>&1
 assert_line '  backend: off'
