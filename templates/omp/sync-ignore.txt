@@ -1,0 +1,23 @@
+# Live OMP keys that omp-sync-settings never copies into templates/omp/config.yml.
+# One dot-separated key path per line; ignoring a key also ignores everything under it.
+
+# Each Mac chooses its own models.
+modelRoles
+task.agentModelOverrides
+
+# Role-owned through templates/omp/role.yml.tera.
+memory
+
+# OMP's own onboarding state.
+setupVersion
+
+# Secrets; hindsight.apiUrl is also refused by the task itself.
+hindsight.apiUrl
+hindsight.apiToken
+auth.broker.token
+dev.autoqaPush.token
+images.urls.credentials
+mnemopi.embeddingApiKey
+mnemopi.llmApiKey
+searxng.basicPassword
+searxng.token

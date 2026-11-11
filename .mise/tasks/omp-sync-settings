@@ -1,29 +1,33 @@
 #!/usr/bin/env bash
-#MISE description="Copy live values of the shared OMP keys back to templates/omp/config.yml"
+#MISE description="Copy every live OMP setting except the ignore list back to templates/omp/config.yml"
 set -euo pipefail
 
 live_config="$HOME/.omp/agent/config.yml"
 shared_source="$MISE_PROJECT_ROOT/templates/omp/config.yml"
+ignore_list="$MISE_PROJECT_ROOT/templates/omp/sync-ignore.txt"
 
 if [[ ! -f "$live_config" ]]; then
     printf 'No live OMP config at %s; run mise bootstrap first.\n' "$live_config" >&2
     exit 1
 fi
 
-# For each non-map key the shared source declares, take a differing live value; role, model, and secret keys never qualify.
+# Key paths without comments, whitespace, or blank lines.
+sync_ignore="$(sed -e 's/#.*//' -e 's/[[:space:]]//g' -e '/^$/d' "$ignore_list")"
+export sync_ignore
+
+# Merge live into the template to keep its key order, drop keys live lacks, then drop ignored paths.
 sync_expression='
 select(fi == 1) as $live
 | select(fi == 0)
-| (.. | select(tag != "!!map" and (parent | tag) == "!!map") | path
-    | select((.[0] == "modelRoles" or .[0] == "memory" or (.[0] == "hindsight" and .[1] == "apiUrl")) | not)
-  ) as $p ireduce (.;
-    ($p[:-1][] as $k ireduce ($live; .[$k])) as $parent
-    | if ($parent | tag) == "!!map" and ($parent | has($p[-1]))
-        and ($parent[$p[-1]] | to_json(0)) != ($p[] as $k ireduce (.; .[$k]) | to_json(0))
-      then setpath($p; $parent[$p[-1]])
-      else .
-      end
-  )
+| . * $live
+| delpaths([.. | select((parent | tag) == "!!map") | path
+    | select(. as $p | ($p[:-1][] as $k ireduce ($live; .[$k])) as $parent
+        | (($parent | tag) == "!!map" and ($parent | has($p[-1]))) | not)])
+| delpaths([strenv(sync_ignore) | split("\n")[] | select(. != "") | split(".")])
+| if (.hindsight | tag) == "!!map" and (.hindsight | has("apiUrl"))
+  then error("refusing to write hindsight.apiUrl to templates/omp/config.yml")
+  else .
+  end
 '
 
 temporary_source="$(mktemp "$shared_source.XXXXXX")"
