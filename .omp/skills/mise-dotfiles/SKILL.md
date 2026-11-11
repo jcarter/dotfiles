@@ -39,6 +39,7 @@ globs:
 | `mise run update` | Upgrade mise, its tools, and declared packages (`mise bootstrap packages upgrade`); bootstrap refreshes Fisher plugins. |
 | `mise run check` | Report Git, package (`mise bootstrap packages status --missing`), and mise state without applying changes or reading secrets. |
 | `mise run omp-hindsight` | Set the personal `hindsight.apiUrl` from fnox; a no-op for the work role. Bootstrap runs it after tools are installed. |
+| `mise run omp-sync-settings` | Copy live values of the keys declared in `templates/omp/config.yml` back to that file atomically with yq; never writes `modelRoles`, `memory`, `hindsight.apiUrl`, or undeclared keys, and fails when the live config is missing. |
 | `mise dot status --missing ~/.omp/agent/config.yml` | Exit non-zero when a declared OMP key drifted, without reading secrets. |
 | `mise bootstrap --dry-run --yes` | Preview the bootstrap plan. |
 
@@ -48,7 +49,7 @@ Edit tracked files in this repository directly; mise links them into the home di
 
 When adding a normal dotfile, put it under `home/` and add or extend its `[dotfiles]` mapping in `mise.toml`. Prefer `symlink-each` for directories that also contain untracked local files.
 
-Do not link or copy OMP's live `~/.omp/agent/config.yml`; OMP rewrites it. To persist an OMP setting, edit its key in the tracked merge source; there is no sync-back command. Deleting a key from a source stops managing it but leaves it in the live file. Merged maps keep keys OMP added; lists and scalars are replaced. Its themes are static and may be linked from `home/.omp/agent/themes`.
+Do not link or copy OMP's live `~/.omp/agent/config.yml`; OMP rewrites it. To persist a shared setting changed in OMP: change it in OMP, run `mise run omp-sync-settings`, review `git diff templates/omp/config.yml`, then commit and push. Do this before `mise run sync`, which reapplies the tracked values. The task only updates keys already in `templates/omp/config.yml`; add a new shared key there by hand, and edit role keys in `templates/omp/role.yml.tera`. Native `mise dot add` and `mise dot capture` cannot write merge entries back. Deleting a key from a source stops managing it but leaves it in the live file. Merged maps keep keys OMP added; lists and scalars are replaced. Its themes are static and may be linked from `home/.omp/agent/themes`.
 
 When changing installation, packages, or bootstrap behavior, trace `install.sh` through `mise.toml` and the `sync`, `update`, and `check` tasks as one workflow. Keep one obvious owner for each operation; do not duplicate convergence in hooks or parallel implementations.
 
@@ -72,7 +73,7 @@ Run the smallest relevant checks from the repository root:
 
 - For installer, trust, packages, or bootstrap changes: `tests/test-bootstrap.sh`.
 - For dotfile mappings or link modes: `tests/test-dotfiles.sh`.
-- For OMP merge source, Hindsight task, or role changes: `tests/test-omp-settings.sh`.
+- For OMP merge source, Hindsight task, sync-back, or role changes: `tests/test-omp-settings.sh`.
 - For Bash changes: `bash -n install.sh lib/*.sh .mise/tasks/* tests/*.sh`.
 - For Fish changes: `fish -n home/.config/fish/config.fish home/.config/fish/conf.d/*.fish home/.config/fish/functions/*.fish`.
 - For Fish theme changes: `tests/test-fish-theme.sh`.
