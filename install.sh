@@ -136,8 +136,9 @@ ensureRoleConfig() {
     printf 'Created %s for the %s role.\n' "$config" "$role"
 }
 
+# Prompts on the terminal and stores the answer, or the variable's current value, in the named variable.
 promptValue() {
-    local prompt="$1" defaultValue="$2" result
+    local variableName="$1" prompt="$2" defaultValue="${!1}" result=''
     if [[ -t 1 && -r /dev/tty ]]; then
         if [[ -n "$defaultValue" ]]; then
             printf '%s [%s]: ' "$prompt" "$defaultValue" >/dev/tty
@@ -145,10 +146,8 @@ promptValue() {
             printf '%s: ' "$prompt" >/dev/tty
         fi
         IFS= read -r result </dev/tty || result=''
-        printf '%s\n' "${result:-$defaultValue}"
-    else
-        printf '%s\n' "$defaultValue"
     fi
+    printf -v "$variableName" '%s' "${result:-$defaultValue}"
 }
 
 ensureGitIdentity() {
@@ -163,10 +162,10 @@ ensureGitIdentity() {
     name="${GIT_USER_NAME:-$(git config --global user.name 2>/dev/null || true)}"
     email="${GIT_USER_EMAIL:-$(git config --global user.email 2>/dev/null || true)}"
     if [[ -z "${GIT_USER_NAME:-}" ]]; then
-        name="$(promptValue 'Git user name' "$name")"
+        promptValue name 'Git user name'
     fi
     if [[ -z "${GIT_USER_EMAIL:-}" ]]; then
-        email="$(promptValue 'Git email' "$email")"
+        promptValue email 'Git email'
     fi
     if [[ -z "$name" || -z "$email" ]]; then
         printf '%s\n' 'Git identity is required. Set GIT_USER_NAME and GIT_USER_EMAIL, then rerun.' >&2

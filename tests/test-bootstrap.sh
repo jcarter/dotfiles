@@ -133,7 +133,7 @@ fi
 grep -Fq 'run `mise run sync`' <<<"$updateOutput" || fail 'retired --update option lacked sync guidance'
 [[ ! -s "$BOOTSTRAP_TEST_LOG" ]] || fail 'retired --update option ran external setup actions'
 
-# A fresh work setup gets the same interactive 1Password preparation as personal.
+# A fresh work setup prompts for the Git identity and gets the same interactive 1Password preparation as personal.
 promptRepo="$temporaryDir/prompt-repo"
 promptHome="$temporaryDir/prompt-home"
 promptLog="$temporaryDir/prompt-actions.log"
@@ -144,15 +144,25 @@ promptOutput="$(
         -u DOTFILES_ROLE \
         -u DOTFILES_DIR \
         -u DOTFILES_REPO \
+        -u GIT_USER_NAME \
+        -u GIT_USER_EMAIL \
         HOME="$promptHome" \
         PATH="$testPath" \
         MISE_PROJECT_ROOT="$promptRepo" \
         BOOTSTRAP_TEST_LOG="$promptLog" \
-        GIT_USER_NAME='Test User' \
-        GIT_USER_EMAIL='test@example.com' \
         /usr/bin/expect -f - "$promptRepo/install.sh" <<'EOF'
 set timeout 10
 spawn -noecho [lindex $argv 0] work
+expect {
+    "Git user name: " { send -- "Prompt User\r" }
+    timeout { puts stderr "Timed out waiting for the Git name prompt"; exit 1 }
+    eof { puts stderr "Installer exited before the Git name prompt"; exit 1 }
+}
+expect {
+    "Git email: " { send -- "prompt@example.com\r" }
+    timeout { puts stderr "Timed out waiting for the Git email prompt"; exit 1 }
+    eof { puts stderr "Installer exited before the Git email prompt"; exit 1 }
+}
 expect {
     "Press Return when 1Password is ready." { send -- "\r" }
     timeout { puts stderr "Timed out waiting for the 1Password prompt"; exit 1 }
@@ -168,6 +178,9 @@ exit [lindex $result 3]
 EOF
 )"
 grep -Fq 'Integrate with' <<<"$promptOutput" || fail 'work setup did not show the 1Password integration prompt'
+promptGitConfig="$promptHome/.config/git/config.local"
+[[ "$(git config --file "$promptGitConfig" user.name)" == 'Prompt User' ]] || fail 'prompted Git name was not written'
+[[ "$(git config --file "$promptGitConfig" user.email)" == 'prompt@example.com' ]] || fail 'prompted Git email was not written'
 grep -Fqx 'open -a 1Password' "$promptLog" || fail 'work setup did not open 1Password'
 assertBefore 'mise bootstrap packages apply --yes' 'open -a 1Password' "$promptLog" '1Password prompt ran before packages were applied'
 assertBefore 'open -a 1Password' 'mise bootstrap --yes' "$promptLog" 'bootstrap ran before the 1Password prompt'
