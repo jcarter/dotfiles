@@ -1,3 +1,6 @@
+# Named zz-* on purpose: conf.d loads alphabetically, before config.fish activates
+# mise. This must sort after color-theme.fish, because fish_config calls `cat`
+# while loading themes and `alias cat 'bat ...'` would fail with bat not on PATH yet.
 if status is-interactive
     # File system
     alias ls 'eza -lh --group-directories-first --icons=auto'
